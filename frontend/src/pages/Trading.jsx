@@ -20,7 +20,7 @@ function Trading() {
   const [portfolio, setPortfolio] = useState([]);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [lastPurchase, setLastPurchase] = useState(null);
-  const [stockFilter, setStockFilter] = useState("all"); // all, positive, negative
+  const [stockFilter, setStockFilter] = useState("all"); // all, positive, negative, dividend, largeCap, midCap, smallCap
   const [fundFilter, setFundFilter] = useState("all");
   const [tradeMode, setTradeMode] = useState("buy"); // buy or sell
   const [selectedHolding, setSelectedHolding] = useState(null);
@@ -54,6 +54,9 @@ function Trading() {
       positive: true,
       category: "Technology",
       trend: null,
+      dividend: 2.5,
+      peRatio: 18.5,
+      marketCap: "Large",
     },
     {
       id: 2,
@@ -64,6 +67,9 @@ function Trading() {
       positive: false,
       category: "Finance",
       trend: null,
+      dividend: 0,
+      peRatio: 22.3,
+      marketCap: "Mid",
     },
     {
       id: 3,
@@ -74,6 +80,9 @@ function Trading() {
       positive: true,
       category: "Healthcare",
       trend: null,
+      dividend: 3.2,
+      peRatio: 15.7,
+      marketCap: "Large",
     },
     {
       id: 4,
@@ -84,6 +93,9 @@ function Trading() {
       positive: false,
       category: "Energy",
       trend: null,
+      dividend: 4.5,
+      peRatio: 12.1,
+      marketCap: "Mid",
     },
     {
       id: 5,
@@ -94,6 +106,9 @@ function Trading() {
       positive: true,
       category: "Consumer",
       trend: null,
+      dividend: 1.8,
+      peRatio: 20.4,
+      marketCap: "Small",
     },
   ];
 
@@ -107,6 +122,8 @@ function Trading() {
       positive: true,
       category: "Mutual Fund",
       trend: null,
+      riskLevel: "Medium",
+      returns3Y: 12.5,
     },
     {
       id: 7,
@@ -117,6 +134,20 @@ function Trading() {
       positive: true,
       category: "Mutual Fund",
       trend: null,
+      riskLevel: "High",
+      returns3Y: 18.3,
+    },
+    {
+      id: 8,
+      symbol: "DEBT",
+      name: "Debt Fund",
+      price: 3500,
+      change: 0.8,
+      positive: true,
+      category: "Mutual Fund",
+      trend: null,
+      riskLevel: "Low",
+      returns3Y: 7.2,
     },
   ];
 
@@ -448,6 +479,13 @@ function Trading() {
                     <option value="all">All</option>
                     <option value="positive">Gainers</option>
                     <option value="negative">Losers</option>
+                    <option value="dividend">Dividend Stocks</option>
+                    <option value="largeCap">Large Cap</option>
+                    <option value="midCap">Mid Cap</option>
+                    <option value="smallCap">Small Cap</option>
+                    <option value="lowPE">Low P/E (&lt; 15)</option>
+                    <option value="highPrice">High Price (&gt; ₹2000)</option>
+                    <option value="lowPrice">Low Price (&lt; ₹2000)</option>
                   </select>
                 </div>
               </div>
@@ -456,6 +494,13 @@ function Trading() {
                   .filter((stock) => {
                     if (stockFilter === "positive") return stock.positive;
                     if (stockFilter === "negative") return !stock.positive;
+                    if (stockFilter === "dividend") return stock.dividend > 0;
+                    if (stockFilter === "largeCap") return stock.marketCap === "Large";
+                    if (stockFilter === "midCap") return stock.marketCap === "Mid";
+                    if (stockFilter === "smallCap") return stock.marketCap === "Small";
+                    if (stockFilter === "lowPE") return stock.peRatio < 15;
+                    if (stockFilter === "highPrice") return stock.price > 2000;
+                    if (stockFilter === "lowPrice") return stock.price < 2000;
                     return true;
                   })
                   .map((stock) => (
@@ -518,7 +563,12 @@ function Trading() {
                     className="text-sm bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg px-3 py-1.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   >
                     <option value="all">All</option>
-                    <option value="positive">High Returns</option>
+                    <option value="positive">High Returns (&gt; 3%)</option>
+                    <option value="lowRisk">Low Risk</option>
+                    <option value="mediumRisk">Medium Risk</option>
+                    <option value="highRisk">High Risk</option>
+                    <option value="highReturns3Y">Best 3Y Returns (&gt; 15%)</option>
+                    <option value="lowPrice">Affordable (&lt; ₹5000)</option>
                   </select>
                 </div>
               </div>
@@ -526,6 +576,11 @@ function Trading() {
                 {mutualFunds
                   .filter((fund) => {
                     if (fundFilter === "positive") return fund.change > 3;
+                    if (fundFilter === "lowRisk") return fund.riskLevel === "Low";
+                    if (fundFilter === "mediumRisk") return fund.riskLevel === "Medium";
+                    if (fundFilter === "highRisk") return fund.riskLevel === "High";
+                    if (fundFilter === "highReturns3Y") return fund.returns3Y > 15;
+                    if (fundFilter === "lowPrice") return fund.price < 5000;
                     return true;
                   })
                   .map((fund) => (
