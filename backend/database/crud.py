@@ -4,6 +4,10 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from auth.auth_service import get_password_hash, verify_password # Centralized security service
 from typing import List
+from datetime import date, timedelta
+from typing import Optional
+from sqlalchemy.orm import Session
+from sqlalchemy import Date
 
 # --- USER CRUD (Read and Create) ---
 
@@ -83,3 +87,31 @@ def create_simulator_session(db: Session, session_data: schemas.SimulatorSession
     db.commit()
     db.refresh(db_session)
     return db_session
+
+def calculate_consecutive_days_logged(db: Session, user_id: int) -> int:
+    """Calculates the user's current consecutive logging streak."""
+    
+    today = date.today()
+    streak = 0
+    
+    # 1. Define the casted column expression
+    casted_date_column = models.Expense.date.cast(Date).label('expense_date_only')
+
+    # 2. Query only the DISTINCT casted column, and ORDER BY the casted column
+    logged_dates_results = db.query(casted_date_column).filter(
+        models.Expense.owner_id == user_id
+    ).distinct(
+    ).order_by(casted_date_column.desc() # FIX: Ordering by the casted value
+    ).all()
+    
+    # Extract just the date objects from the result tuples
+    logged_dates = {d[0] for d in logged_dates_results} 
+    
+    current_day = today
+    
+    # Loop backward to calculate the streak
+    while current_day in logged_dates:
+        streak += 1
+        current_day -= timedelta(days=1)
+        
+    return streak

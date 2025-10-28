@@ -2,17 +2,18 @@
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
 from typing import Dict
+import random
 
 # Database, Security, and Schema Imports
 from database.database import create_db_and_tables, get_db
 from database import crud, schemas
 from auth.auth_service import create_access_token, verify_password, get_current_user_email
 from auth.auth_service import ACCESS_TOKEN_EXPIRE_MINUTES
-from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, generate_financial_summary
+from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, generate_financial_summary, get_chat_response, execute_investment_simulation, get_mock_asset_history
 
 # --- APP INITIALIZATION ---
 load_dotenv()
@@ -166,28 +167,38 @@ def get_daily_checkin_prompt(
     # Return a random prompt to keep the app fresh
     return random.choice(prompts)
 
-@app.get("/summary/coach", tags=["AI"])
-def get_coach_summary(db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
-    """Generates the AI-Powered Summary based on user expenses."""
+@app.post("/chat", tags=["AI"])
+def handle_chat(
+    chat_message: schemas.ChatMessage,
+    # NOTE: chat_history should be passed by Muneer's frontend
+    db: Session = Depends(get_db), 
+    current_user_email: str = Depends(get_current_user_email)
+):
+    # Dummy chat history for MVP (Muneer needs to send the real history)
+    chat_history = [
+        {"role": "user", "message": "What is compound interest?"},
+        {"role": "model", "message": "It's money earning money!"}
+    ]
+    
+    response_text = get_chat_response(chat_message.message, chat_history)
+    return {"reply": response_text}
+
+@app.post("/simulate/invest/action", tags=["AI"])
+def simulate_investment_action(
+    action_data: schemas.InvestmentAction,
+    db: Session = Depends(get_db),
+    current_user_email: str = Depends(get_current_user_email)
+):
+    """Simulates a buy/sell action like a real trading platform and returns status."""
     user = crud.get_user_by_email(db, email=current_user_email)
     if not user: raise HTTPException(status_code=404, detail="User not found")
-
-    # Retrieve user's last 50 expenses
-    expenses = crud.get_user_expenses(db, user_id=user.id, limit=50)
+        
+    # Execute the AI agent
+    transaction_status = execute_investment_simulation(user.id, action_data)
     
-    # Prepare data for LLM analysis
-    expense_data = [{"amount": e.amount, "category": e.category, "note": e.note} for e in expenses]
+    # NOTE: You would save the status to the SimulatorSession table here
     
-    user_data = {
-        "fixed_budget": user.fixed_budget,
-        "financial_confidence": user.financial_confidence,
-        "goal_name": "Emergency Fund", # Simplification for MVP
-    }
-    
-    # Call the Gemini Agent
-    summary_text = generate_financial_summary(user_data, expense_data)
-    
-    return {"summary": summary_text}
+    return transaction_status
 
 @app.post("/simulate/invest", tags=["AI"])
 def simulate_investment(
@@ -231,6 +242,29 @@ def simulate_investment(
         "simulation_result": result,
         "course_content": course_content
     }
+
+@app.get("/market/asset-history/{symbol}", tags=["AI"])
+def get_asset_history(
+    symbol: str, 
+    # FIX IS HERE: Inject the database dependency
+    db: Session = Depends(get_db), 
+    current_user_email: str = Depends(get_current_user_email)
+):
+    """Provides historical data for charting (now from static mock store)."""
+    
+    # 1. Verification and DB Check
+    user = crud.get_user_by_email(db, email=current_user_email) # 'db' is now defined!
+    if not user: 
+        # Since auth passed, this user should exist, but it's good practice
+        raise HTTPException(status_code=404, detail="User not found") 
+        
+    # 2. Retrieve data from the new static store
+    history = get_mock_asset_history(symbol.upper())
+    
+    if not history:
+        raise HTTPException(status_code=404, detail=f"Asset symbol '{symbol}' not found in mock store.")
+        
+    return {"symbol": symbol, "history": history}
 
 # database/crud.py (Add to the end of the file)
 

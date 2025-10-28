@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 from typing import List, Dict
 import random
+from datetime import datetime, timedelta
+from database.schemas import InvestmentAction
 
 # --- Configuration and Client Initialization ---
 load_dotenv()
@@ -21,6 +23,37 @@ except Exception as e:
     client = None
 
 # --- Investment Simulation Logic (Internal Tool for the LLM) ---
+
+STATIC_ASSET_HISTORY = {}
+ASSET_LIST = [
+    "AAPL", "GOOG", "MSFT", "TSLA", "AMZN", 
+    "VTI", "VOO", "SBUX", "DIS", "JNJ",
+    "GOLD_ETF", "US_BONDS", "IND_FUND"
+]
+
+def _generate_mock_prices(base_price, volatility):
+    """Helper to generate a slightly variable price trend."""
+    prices = []
+    current_date = datetime.now().date()
+    current_price = base_price
+    
+    for i in range(9, -1, -1):
+        date = (current_date - timedelta(days=i)).isoformat()
+        # Price fluctuates based on volatility
+        change = random.uniform(-volatility, volatility)
+        current_price += change
+        current_price = max(current_price, base_price * 0.95) # Keep price realistic
+        prices.append({"date": date, "price": round(current_price, 2)})
+    return prices
+
+for symbol in ASSET_LIST:
+    base = 150.0 + (hash(symbol) % 100) # Unique base price
+    volatility = 1.0 + (hash(symbol) % 3) / 2 # Unique volatility
+    STATIC_ASSET_HISTORY[symbol] = _generate_mock_prices(base, volatility)
+
+def get_mock_asset_history(symbol: str) -> List[Dict]:
+    """Retrieves the static 10-day historical data for a symbol."""
+    return STATIC_ASSET_HISTORY.get(symbol, [])
 
 def run_mock_simulation(start: float, monthly: float, years: int, risk: str) -> Dict:
     """Mocks a backend compounding interest calculation."""
@@ -125,3 +158,58 @@ def generate_investment_micro_course(user_data: Dict, simulation_result: Dict) -
         config=types.GenerateContentConfig(temperature=0.5)
     )
     return response.text
+
+def get_chat_response(user_message: str, chat_history: List[Dict]) -> str:
+    """Handles conversational chat, including general Q&A and financial literacy."""
+    if not client: return "AI Chatbot is offline."
+
+    # Inject the history and a system persona
+    full_prompt = f"""
+    SYSTEM ROLE: You are 'Frugal Friend,' an empathetic and witty AI Financial Coach. 
+    Your goal is to answer user questions, guide them to financial literacy, and encourage saving. 
+    Keep responses concise and conversational.
+    
+    CHAT HISTORY: {chat_history}
+    USER MESSAGE: {user_message}
+    """
+    
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=full_prompt,
+        config=types.GenerateContentConfig(temperature=0.7)
+    )
+    return response.text
+
+# ai/coach_agent.py (New function for transactional simulation)
+
+def execute_investment_simulation(user_id: int, action_data: InvestmentAction) -> Dict:
+    """
+    Simulates a real-time investment transaction and returns a structured status update.
+    This simulates market lookup, execution, and confirmation.
+    """
+    if not client: return {"status": "error", "message": "Simulation offline."}
+
+    # Use a dynamic prompt to determine the outcome and generate confirmation text
+    prompt = f"""
+    SYSTEM ROLE: You are the trading engine for 'The Frugal Friend' paper trading platform. 
+    The user is attempting to perform a '{action_data.action}' action on '{action_data.symbol}' 
+    for ${action_data.amount}. Assume the user's paper balance is $10,000. 
+    
+    INSTRUCTIONS:
+    1.  Determine the outcome: 90% success rate, 10% failure (due to 'market volatility').
+    2.  If successful, generate a **confirmation message** suitable for an app notification.
+    3.  If failed, generate a **reason for failure** (e.g., 'Volatile market conditions').
+    4.  Generate a **mock current paper balance** after the transaction.
+    5.  Output the response as a valid JSON object.
+    
+    JSON SCHEMA: {{"status": "success/failure", "message": "Confirmation text", "new_balance": 9900.0}}
+    """
+    
+    # Use a strong model for reliable JSON output
+    response = client.models.generate_content(
+        model='gemini-2.5-pro',
+        contents=prompt
+    )
+    
+    # NOTE: In a real hackathon, you'd use a Pydantic structure for reliable JSON parsing here.
+    return {"status": "success", "message": "Simulated order confirmed.", "new_balance": 9850.0}

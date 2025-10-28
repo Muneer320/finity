@@ -77,7 +77,7 @@ class Goal(BaseModel):
         
 class SimulatorSession(BaseModel):
     """Schema for returning a saved simulator session."""
-    id: int
+    id: Optional[int] = None
     start_amount: float
     monthly_contribution: float
     risk_level: str
@@ -86,3 +86,13 @@ class SimulatorSession(BaseModel):
     
     class Config:
         from_attributes = True
+
+class ChatMessage(BaseModel):
+    message : str
+
+class InvestmentAction(BaseModel):
+    """Schema for a user's buy/sell request in the simulator."""
+    asset_type: str # 'Stock', 'Mutual Fund', 'Gold'
+    symbol: str # e.g., 'AAPL' or 'Gold ETF'
+    action: str # 'Buy' or 'Sell'
+    amount: float
