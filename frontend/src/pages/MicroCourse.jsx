@@ -237,33 +237,35 @@ function MicroCourse() {
       setCompletedLessons(updated);
       localStorage.setItem("completedLessons", JSON.stringify(updated));
 
-      // Award badge for completing first course
-      const badges = JSON.parse(localStorage.getItem("badges") || "[]");
+      // Award achievement for completing first course
+      const achievements = JSON.parse(
+        localStorage.getItem("achievements") || "[]"
+      );
       if (
         updated.length === 1 &&
-        !badges.some((b) => b.name === "Knowledge Seeker")
+        !achievements.some((a) => a.name === "Knowledge Seeker")
       ) {
-        badges.push({
+        achievements.push({
           icon: "📚",
           name: "Knowledge Seeker",
           description: "Completed your first micro course!",
           date: new Date().toISOString(),
         });
-        localStorage.setItem("badges", JSON.stringify(badges));
+        localStorage.setItem("achievements", JSON.stringify(achievements));
       }
 
-      // Award badge for completing 3 courses
+      // Award achievement for completing 3 courses
       if (
         updated.length === 3 &&
-        !badges.some((b) => b.name === "Learning Master")
+        !achievements.some((a) => a.name === "Learning Master")
       ) {
-        badges.push({
+        achievements.push({
           icon: "🎓",
           name: "Learning Master",
           description: "Completed 3 micro courses!",
           date: new Date().toISOString(),
         });
-        localStorage.setItem("badges", JSON.stringify(badges));
+        localStorage.setItem("achievements", JSON.stringify(achievements));
       }
     }
   };
@@ -320,7 +322,7 @@ function MicroCourse() {
             <div className="flex items-center gap-3 mb-2">
               <Award className="w-5 h-5 text-yellow-500" />
               <span className="text-gray-600 dark:text-gray-400 text-sm">
-                Badges Earned
+                Achievements Earned
               </span>
             </div>
             <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">

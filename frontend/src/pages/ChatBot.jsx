@@ -54,16 +54,18 @@ function ChatBot() {
       setMessages((prev) => [...prev, aiResponse]);
       setIsLoading(false);
 
-      // Award badge for first chat
-      const badges = JSON.parse(localStorage.getItem("badges") || "[]");
-      if (!badges.some((b) => b.name === "First Chat")) {
-        badges.push({
+      // Award achievement for first chat
+      const achievements = JSON.parse(
+        localStorage.getItem("achievements") || "[]"
+      );
+      if (!achievements.some((a) => a.name === "First Chat")) {
+        achievements.push({
           icon: "💬",
           name: "First Chat",
           description: "Asked your first question!",
           date: new Date().toISOString(),
         });
-        localStorage.setItem("badges", JSON.stringify(badges));
+        localStorage.setItem("achievements", JSON.stringify(achievements));
       }
     }, 1500);
   };

@@ -20,7 +20,7 @@ function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [showBadges, setShowBadges] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -38,10 +38,10 @@ function Layout({ children }) {
     navigate("/login");
   };
 
-  const badges = JSON.parse(localStorage.getItem("badges") || "[]");
+  const achievements = JSON.parse(localStorage.getItem("achievements") || "[]");
 
-  // All possible badges in the app
-  const allPossibleBadges = [
+  // All possible achievements in the app
+  const allPossibleAchievements = [
     {
       icon: "🎉",
       name: "Getting Started",
@@ -109,8 +109,16 @@ function Layout({ children }) {
       {/* Mobile Warning */}
       <div className="lg:hidden fixed inset-0 bg-dark-950 flex items-center justify-center p-8 z-50">
         <div className="text-center">
-          <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary-500" />
-          <h1 className="text-2xl font-display font-bold mb-2">Finity</h1>
+          <img
+            src="/finityLogo.png"
+            alt="Finity"
+            className="w-16 h-16 mx-auto mb-4"
+          />
+          <img
+            src="/finityLogoText.png"
+            alt="Finity"
+            className="h-8 mx-auto mb-4"
+          />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
             experience.
@@ -124,12 +132,10 @@ function Layout({ children }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-gray-200 dark:border-dark-800">
-            <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-white" />
-              </div>
-              Finity
-            </h1>
+            <div className="flex items-center gap-2">
+              <img src="/finityLogo.png" alt="Finity" className="w-8 h-8" />
+              <img src="/finityLogoText.png" alt="Finity" className="h-6" />
+            </div>
           </div>
 
           {/* Navigation */}
@@ -155,17 +161,17 @@ function Layout({ children }) {
             })}
           </nav>
 
-          {/* Badges Button */}
+          {/* Achievements Button */}
           <div className="p-4 border-t border-gray-200 dark:border-dark-800">
             <button
-              onClick={() => setShowBadges(!showBadges)}
+              onClick={() => setShowAchievements(!showAchievements)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800 hover:text-gray-900 dark:hover:text-white transition-all"
             >
               <Award className="w-5 h-5" />
-              <span className="font-medium">Badges</span>
-              {badges.length > 0 && (
+              <span className="font-medium">Achievements</span>
+              {achievements.length > 0 && (
                 <span className="ml-auto bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                  {badges.length}
+                  {achievements.length}
                 </span>
               )}
             </button>
@@ -204,28 +210,31 @@ function Layout({ children }) {
         {children}
       </div>
 
-      {/* Badges Modal */}
-      {showBadges && (
+      {/* Achievements Modal */}
+      {showAchievements && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowBadges(false)}
+          onClick={() => setShowAchievements(false)}
         >
           <div
             className="bg-white dark:bg-dark-900 rounded-xl p-8 max-w-4xl w-full mx-4 border border-gray-200 dark:border-dark-800 max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
                 Your Achievements
               </h3>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                {badges.length} / {allPossibleBadges.length} Unlocked
+                {achievements.length} / {allPossibleAchievements.length}{" "}
+                Unlocked
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {allPossibleBadges.map((badge, index) => {
-                const isUnlocked = badges.some((b) => b.name === badge.name);
+              {allPossibleAchievements.map((achievement, index) => {
+                const isUnlocked = achievements.some(
+                  (a) => a.name === achievement.name
+                );
                 return (
                   <div
                     key={index}
@@ -238,16 +247,16 @@ function Layout({ children }) {
                         <Lock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                       </div>
                     )}
-                    <div className="text-4xl mb-2">{badge.icon}</div>
+                    <div className="text-4xl mb-2">{achievement.icon}</div>
                     <div className="font-medium text-sm text-gray-900 dark:text-white">
-                      {badge.name}
+                      {achievement.name}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {badge.description}
+                      {achievement.description}
                     </div>
-                    {!isUnlocked && badge.requirement && (
+                    {!isUnlocked && achievement.requirement && (
                       <div className="text-xs text-primary-500 mt-2">
-                        🎯 {badge.requirement}
+                        🎯 {achievement.requirement}
                       </div>
                     )}
                   </div>
@@ -256,7 +265,7 @@ function Layout({ children }) {
             </div>
 
             <button
-              onClick={() => setShowBadges(false)}
+              onClick={() => setShowAchievements(false)}
               className="btn-secondary w-full mt-6"
             >
               Close

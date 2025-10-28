@@ -17,14 +17,16 @@ function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState(null);
   const [editedData, setEditedData] = useState(null);
-  const [badges, setBadges] = useState([]);
+  const [achievements, setAchievements] = useState([]);
 
   useEffect(() => {
     const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
-    const userBadges = JSON.parse(localStorage.getItem("badges") || "[]");
+    const userAchievements = JSON.parse(
+      localStorage.getItem("achievements") || "[]"
+    );
     setUserData(profile);
     setEditedData(profile);
-    setBadges(userBadges);
+    setAchievements(userAchievements);
   }, []);
 
   const handleSave = () => {
@@ -260,32 +262,32 @@ function Profile() {
               <div className="space-y-3">
                 <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg text-center">
                   <div className="text-4xl font-display font-bold text-primary-500 mb-1">
-                    {badges.length}
+                    {achievements.length}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Badges Earned
+                    Achievements Earned
                   </div>
                 </div>
 
-                {badges.length > 0 && (
+                {achievements.length > 0 && (
                   <div className="grid grid-cols-2 gap-2">
-                    {badges.slice(0, 4).map((badge, index) => (
+                    {achievements.slice(0, 4).map((achievement, index) => (
                       <div
                         key={index}
                         className="p-3 bg-gray-100 dark:bg-dark-800 rounded-lg text-center"
                       >
-                        <div className="text-3xl mb-1">{badge.icon}</div>
+                        <div className="text-3xl mb-1">{achievement.icon}</div>
                         <div className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                          {badge.name}
+                          {achievement.name}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {badges.length > 4 && (
+                {achievements.length > 4 && (
                   <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                    +{badges.length - 4} more badges
+                    +{achievements.length - 4} more achievements
                   </div>
                 )}
               </div>

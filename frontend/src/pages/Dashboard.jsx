@@ -17,16 +17,18 @@ function Dashboard() {
     const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
     setUserData(profile);
 
-    // Award first badge on dashboard visit
-    const badges = JSON.parse(localStorage.getItem("badges") || "[]");
-    if (badges.length === 0) {
-      const firstBadge = {
+    // Award first achievement on dashboard visit
+    const achievements = JSON.parse(
+      localStorage.getItem("achievements") || "[]"
+    );
+    if (achievements.length === 0) {
+      const firstAchievement = {
         icon: "🎉",
         name: "Getting Started",
         description: "Completed your profile!",
         date: new Date().toISOString(),
       };
-      localStorage.setItem("badges", JSON.stringify([firstBadge]));
+      localStorage.setItem("achievements", JSON.stringify([firstAchievement]));
     }
   }, []);
 
@@ -63,8 +65,8 @@ function Dashboard() {
 
   const recentActivity = [
     {
-      type: "badge",
-      title: "New Badge Earned!",
+      type: "achievement",
+      title: "New Achievement Earned!",
       description: "Getting Started - Completed your profile",
       time: "Just now",
       icon: "🎉",

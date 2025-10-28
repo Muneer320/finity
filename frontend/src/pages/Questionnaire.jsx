@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle, TrendingUp } from "lucide-react";
 
 function Questionnaire({ setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();

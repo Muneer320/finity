@@ -61,16 +61,18 @@ function Expenses() {
     setTransactions(updated);
     localStorage.setItem("transactions", JSON.stringify(updated));
 
-    // Award badge for first transaction
-    const badges = JSON.parse(localStorage.getItem("badges") || "[]");
-    if (!badges.some((b) => b.name === "Money Manager")) {
-      badges.push({
+    // Award achievement for first transaction
+    const achievements = JSON.parse(
+      localStorage.getItem("achievements") || "[]"
+    );
+    if (!achievements.some((a) => a.name === "Money Manager")) {
+      achievements.push({
         icon: "💰",
         name: "Money Manager",
         description: "Logged your first transaction!",
         date: new Date().toISOString(),
       });
-      localStorage.setItem("badges", JSON.stringify(badges));
+      localStorage.setItem("achievements", JSON.stringify(achievements));
     }
 
     setFormData({

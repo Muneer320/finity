@@ -157,16 +157,18 @@ function Trading() {
 
     setBalance(balance - totalCost);
 
-    // Award badge for first trade
-    const badges = JSON.parse(localStorage.getItem("badges") || "[]");
-    if (!badges.some((b) => b.name === "First Trade")) {
-      badges.push({
+    // Award achievement for first trade
+    const achievements = JSON.parse(
+      localStorage.getItem("achievements") || "[]"
+    );
+    if (!achievements.some((a) => a.name === "First Trade")) {
+      achievements.push({
         icon: "📈",
         name: "First Trade",
         description: "Executed your first mock trade!",
         date: new Date().toISOString(),
       });
-      localStorage.setItem("badges", JSON.stringify(badges));
+      localStorage.setItem("achievements", JSON.stringify(achievements));
     }
 
     setSelectedStock(null);
