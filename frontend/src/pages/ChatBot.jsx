@@ -1,21 +1,22 @@
-import Layout from '../components/Layout';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import Layout from "../components/Layout";
+import { Send, Bot, User, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 function ChatBot() {
   const [messages, setMessages] = useState([
     {
-      role: 'assistant',
-      content: "Hello! I'm your Finity AI Coach. I'm here to help you with your financial questions and provide personalized advice based on your profile. How can I assist you today?",
+      role: "assistant",
+      content:
+        "Hello! I'm your Finity AI Coach. I'm here to help you with your financial questions and provide personalized advice based on your profile. How can I assist you today?",
       timestamp: new Date(),
-    }
+    },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -33,35 +34,36 @@ function ChatBot() {
     if (!input.trim()) return;
 
     const userMessage = {
-      role: 'user',
+      role: "user",
       content: input,
       timestamp: new Date(),
     };
 
     setMessages([...messages, userMessage]);
-    setInput('');
+    setInput("");
     setIsLoading(true);
 
     // TODO: Replace with actual API call
     setTimeout(() => {
       const aiResponse = {
-        role: 'assistant',
-        content: "That's a great question! Based on your profile, I'd recommend starting with index funds or ETFs for diversification. Since you're a beginner, focus on understanding the basics before diving into individual stocks. Would you like me to explain more about index funds?",
+        role: "assistant",
+        content:
+          "That's a great question! Based on your profile, I'd recommend starting with index funds or ETFs for diversification. Since you're a beginner, focus on understanding the basics before diving into individual stocks. Would you like me to explain more about index funds?",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages((prev) => [...prev, aiResponse]);
       setIsLoading(false);
 
       // Award badge for first chat
-      const badges = JSON.parse(localStorage.getItem('badges') || '[]');
-      if (!badges.some(b => b.name === 'First Chat')) {
+      const badges = JSON.parse(localStorage.getItem("badges") || "[]");
+      if (!badges.some((b) => b.name === "First Chat")) {
         badges.push({
-          icon: '💬',
-          name: 'First Chat',
-          description: 'Asked your first question!',
-          date: new Date().toISOString()
+          icon: "💬",
+          name: "First Chat",
+          description: "Asked your first question!",
+          date: new Date().toISOString(),
         });
-        localStorage.setItem('badges', JSON.stringify(badges));
+        localStorage.setItem("badges", JSON.stringify(badges));
       }
     }, 1500);
   };
@@ -80,8 +82,12 @@ function ChatBot() {
               <Bot className="w-6 h-6 text-primary-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-display font-bold">AI Financial Coach</h1>
-              <p className="text-gray-400 text-sm">Powered by advanced AI • Available 24/7</p>
+              <h1 className="text-2xl font-display font-bold">
+                AI Financial Coach
+              </h1>
+              <p className="text-gray-400 text-sm">
+                Powered by advanced AI • Available 24/7
+              </p>
             </div>
           </div>
         </div>
@@ -91,28 +97,33 @@ function ChatBot() {
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-3 ${
+                message.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
-              {message.role === 'assistant' && (
+              {message.role === "assistant" && (
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-600/10 flex items-center justify-center">
                   <Bot className="w-5 h-5 text-primary-500" />
                 </div>
               )}
-              
+
               <div
                 className={`max-w-2xl rounded-2xl px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-dark-800 text-gray-100'
+                  message.role === "user"
+                    ? "bg-primary-600 text-white"
+                    : "bg-dark-800 text-gray-100"
                 }`}
               >
                 <p className="whitespace-pre-wrap">{message.content}</p>
                 <span className="text-xs opacity-70 mt-2 block">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               </div>
 
-              {message.role === 'user' && (
+              {message.role === "user" && (
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-dark-800 flex items-center justify-center">
                   <User className="w-5 h-5 text-gray-400" />
                 </div>
@@ -127,9 +138,18 @@ function ChatBot() {
               </div>
               <div className="bg-dark-800 rounded-2xl px-4 py-3">
                 <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div
+                    className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -166,7 +186,7 @@ function ChatBot() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              onKeyPress={(e) => e.key === "Enter" && handleSend()}
               placeholder="Ask me anything about finance..."
               className="flex-1 input-field"
             />

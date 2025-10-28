@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
 
 function Questionnaire({ setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    age: '',
-    occupation: '',
-    income: '',
-    monthlyExpenses: '',
-    savings: '',
-    investments: '',
-    loans: '',
-    loanAmount: '',
+    age: "",
+    occupation: "",
+    income: "",
+    monthlyExpenses: "",
+    savings: "",
+    investments: "",
+    loans: "",
+    loanAmount: "",
     financialGoals: [],
-    riskTolerance: '',
-    experience: '',
+    riskTolerance: "",
+    experience: "",
   });
 
   const totalSteps = 4;
@@ -37,22 +37,22 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
   const handleSubmit = () => {
     // TODO: Send to API
-    localStorage.setItem('questionnaireCompleted', 'true');
-    localStorage.setItem('userProfile', JSON.stringify(formData));
+    localStorage.setItem("questionnaireCompleted", "true");
+    localStorage.setItem("userProfile", JSON.stringify(formData));
     setHasCompletedQuestionnaire(true);
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const toggleGoal = (goal) => {
     if (formData.financialGoals.includes(goal)) {
       setFormData({
         ...formData,
-        financialGoals: formData.financialGoals.filter(g => g !== goal)
+        financialGoals: formData.financialGoals.filter((g) => g !== goal),
       });
     } else {
       setFormData({
         ...formData,
-        financialGoals: [...formData.financialGoals, goal]
+        financialGoals: [...formData.financialGoals, goal],
       });
     }
   };
@@ -63,11 +63,15 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-display font-bold">Let's Get to Know You</h1>
-            <span className="text-gray-400">Step {step} of {totalSteps}</span>
+            <h1 className="text-2xl font-display font-bold">
+              Let's Get to Know You
+            </h1>
+            <span className="text-gray-400">
+              Step {step} of {totalSteps}
+            </span>
           </div>
           <div className="w-full bg-dark-800 rounded-full h-2">
-            <div 
+            <div
               className="bg-primary-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / totalSteps) * 100}%` }}
             />
@@ -78,27 +82,37 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
         <div className="card">
           {step === 1 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-display font-semibold">Basic Information</h2>
-              
+              <h2 className="text-xl font-display font-semibold">
+                Basic Information
+              </h2>
+
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Age</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Age
+                </label>
                 <input
                   type="number"
                   required
                   className="input-field"
                   placeholder="25"
                   value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, age: e.target.value })
+                  }
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Occupation</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Occupation
+                </label>
                 <select
                   required
                   className="input-field"
                   value={formData.occupation}
-                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, occupation: e.target.value })
+                  }
                 >
                   <option value="">Select your occupation</option>
                   <option value="student">Student</option>
@@ -112,12 +126,16 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Monthly Income (₹)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Monthly Income (₹)
+                </label>
                 <select
                   required
                   className="input-field"
                   value={formData.income}
-                  onChange={(e) => setFormData({ ...formData, income: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, income: e.target.value })
+                  }
                 >
                   <option value="">Select income range</option>
                   <option value="0-25000">₹0 - ₹25,000</option>
@@ -132,8 +150,10 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
           {step === 2 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-display font-semibold">Financial Situation</h2>
-              
+              <h2 className="text-xl font-display font-semibold">
+                Financial Situation
+              </h2>
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Average Monthly Expenses (₹)
@@ -144,7 +164,12 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                   className="input-field"
                   placeholder="30000"
                   value={formData.monthlyExpenses}
-                  onChange={(e) => setFormData({ ...formData, monthlyExpenses: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      monthlyExpenses: e.target.value,
+                    })
+                  }
                 />
               </div>
 
@@ -156,7 +181,9 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                   required
                   className="input-field"
                   value={formData.savings}
-                  onChange={(e) => setFormData({ ...formData, savings: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, savings: e.target.value })
+                  }
                 >
                   <option value="">Select savings range</option>
                   <option value="0-50000">₹0 - ₹50,000</option>
@@ -175,29 +202,31 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                   <button
                     type="button"
                     className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-                      formData.loans === 'yes'
-                        ? 'border-primary-600 bg-primary-600/10 text-primary-500'
-                        : 'border-dark-700 text-gray-400 hover:border-dark-600'
+                      formData.loans === "yes"
+                        ? "border-primary-600 bg-primary-600/10 text-primary-500"
+                        : "border-dark-700 text-gray-400 hover:border-dark-600"
                     }`}
-                    onClick={() => setFormData({ ...formData, loans: 'yes' })}
+                    onClick={() => setFormData({ ...formData, loans: "yes" })}
                   >
                     Yes
                   </button>
                   <button
                     type="button"
                     className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-                      formData.loans === 'no'
-                        ? 'border-primary-600 bg-primary-600/10 text-primary-500'
-                        : 'border-dark-700 text-gray-400 hover:border-dark-600'
+                      formData.loans === "no"
+                        ? "border-primary-600 bg-primary-600/10 text-primary-500"
+                        : "border-dark-700 text-gray-400 hover:border-dark-600"
                     }`}
-                    onClick={() => setFormData({ ...formData, loans: 'no', loanAmount: '' })}
+                    onClick={() =>
+                      setFormData({ ...formData, loans: "no", loanAmount: "" })
+                    }
                   >
                     No
                   </button>
                 </div>
               </div>
 
-              {formData.loans === 'yes' && (
+              {formData.loans === "yes" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Total Loan Amount (₹)
@@ -208,7 +237,9 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                     className="input-field"
                     placeholder="500000"
                     value={formData.loanAmount}
-                    onChange={(e) => setFormData({ ...formData, loanAmount: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, loanAmount: e.target.value })
+                    }
                   />
                 </div>
               )}
@@ -217,8 +248,10 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
           {step === 3 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-display font-semibold">Investment Experience</h2>
-              
+              <h2 className="text-xl font-display font-semibold">
+                Investment Experience
+              </h2>
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Current Investments
@@ -227,14 +260,18 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                   required
                   className="input-field"
                   value={formData.investments}
-                  onChange={(e) => setFormData({ ...formData, investments: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, investments: e.target.value })
+                  }
                 >
                   <option value="">Select your investment status</option>
                   <option value="none">No investments yet</option>
                   <option value="mutual-funds">Mutual Funds</option>
                   <option value="stocks">Stocks</option>
                   <option value="mixed">Stocks & Mutual Funds</option>
-                  <option value="advanced">Stocks, Mutual Funds & Others</option>
+                  <option value="advanced">
+                    Stocks, Mutual Funds & Others
+                  </option>
                 </select>
               </div>
 
@@ -244,19 +281,33 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                 </label>
                 <div className="grid grid-cols-1 gap-3">
                   {[
-                    { value: 'beginner', label: 'Beginner', desc: 'New to investing' },
-                    { value: 'intermediate', label: 'Intermediate', desc: 'Some experience' },
-                    { value: 'advanced', label: 'Advanced', desc: 'Experienced investor' }
+                    {
+                      value: "beginner",
+                      label: "Beginner",
+                      desc: "New to investing",
+                    },
+                    {
+                      value: "intermediate",
+                      label: "Intermediate",
+                      desc: "Some experience",
+                    },
+                    {
+                      value: "advanced",
+                      label: "Advanced",
+                      desc: "Experienced investor",
+                    },
                   ].map((level) => (
                     <button
                       key={level.value}
                       type="button"
                       className={`p-4 rounded-lg border-2 text-left transition-all ${
                         formData.experience === level.value
-                          ? 'border-primary-600 bg-primary-600/10'
-                          : 'border-dark-700 hover:border-dark-600'
+                          ? "border-primary-600 bg-primary-600/10"
+                          : "border-dark-700 hover:border-dark-600"
                       }`}
-                      onClick={() => setFormData({ ...formData, experience: level.value })}
+                      onClick={() =>
+                        setFormData({ ...formData, experience: level.value })
+                      }
                     >
                       <div className="font-medium">{level.label}</div>
                       <div className="text-sm text-gray-400">{level.desc}</div>
@@ -271,19 +322,33 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                 </label>
                 <div className="grid grid-cols-1 gap-3">
                   {[
-                    { value: 'low', label: 'Conservative', desc: 'Prefer safe, low-risk investments' },
-                    { value: 'medium', label: 'Moderate', desc: 'Balanced risk and return' },
-                    { value: 'high', label: 'Aggressive', desc: 'Higher risk for higher returns' }
+                    {
+                      value: "low",
+                      label: "Conservative",
+                      desc: "Prefer safe, low-risk investments",
+                    },
+                    {
+                      value: "medium",
+                      label: "Moderate",
+                      desc: "Balanced risk and return",
+                    },
+                    {
+                      value: "high",
+                      label: "Aggressive",
+                      desc: "Higher risk for higher returns",
+                    },
                   ].map((risk) => (
                     <button
                       key={risk.value}
                       type="button"
                       className={`p-4 rounded-lg border-2 text-left transition-all ${
                         formData.riskTolerance === risk.value
-                          ? 'border-primary-600 bg-primary-600/10'
-                          : 'border-dark-700 hover:border-dark-600'
+                          ? "border-primary-600 bg-primary-600/10"
+                          : "border-dark-700 hover:border-dark-600"
                       }`}
-                      onClick={() => setFormData({ ...formData, riskTolerance: risk.value })}
+                      onClick={() =>
+                        setFormData({ ...formData, riskTolerance: risk.value })
+                      }
                     >
                       <div className="font-medium">{risk.label}</div>
                       <div className="text-sm text-gray-400">{risk.desc}</div>
@@ -296,27 +361,29 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
           {step === 4 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-display font-semibold">Financial Goals</h2>
+              <h2 className="text-xl font-display font-semibold">
+                Financial Goals
+              </h2>
               <p className="text-gray-400">Select all that apply</p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {[
-                  'Build Emergency Fund',
-                  'Save for Retirement',
-                  'Buy a Home',
-                  'Pay Off Debt',
-                  'Start Investing',
-                  'Grow Wealth',
-                  'Financial Independence',
-                  'Education Fund'
+                  "Build Emergency Fund",
+                  "Save for Retirement",
+                  "Buy a Home",
+                  "Pay Off Debt",
+                  "Start Investing",
+                  "Grow Wealth",
+                  "Financial Independence",
+                  "Education Fund",
                 ].map((goal) => (
                   <button
                     key={goal}
                     type="button"
                     className={`p-4 rounded-lg border-2 text-left transition-all ${
                       formData.financialGoals.includes(goal)
-                        ? 'border-primary-600 bg-primary-600/10'
-                        : 'border-dark-700 hover:border-dark-600'
+                        ? "border-primary-600 bg-primary-600/10"
+                        : "border-dark-700 hover:border-dark-600"
                     }`}
                     onClick={() => toggleGoal(goal)}
                   >
@@ -337,7 +404,9 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
             <button
               type="button"
               onClick={handleBack}
-              className={`btn-secondary flex items-center gap-2 ${step === 1 ? 'invisible' : ''}`}
+              className={`btn-secondary flex items-center gap-2 ${
+                step === 1 ? "invisible" : ""
+              }`}
             >
               <ArrowLeft className="w-5 h-5" />
               Back
@@ -348,7 +417,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
               onClick={handleNext}
               className="btn-primary flex items-center gap-2"
             >
-              {step === totalSteps ? 'Complete' : 'Next'}
+              {step === totalSteps ? "Complete" : "Next"}
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>

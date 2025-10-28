@@ -70,37 +70,44 @@ src/
 ## Features Overview
 
 ### Login/Signup
+
 - Clean, modern authentication UI
 - Form validation
 - Responsive design
 
 ### Questionnaire
+
 - 4-step onboarding process
 - Collects financial information
 - Progress indicator
 
 ### Dashboard
+
 - Overview of user's financial status
 - Quick action cards
 - Recent activity feed
 
 ### AI Chatbot
+
 - Real-time chat interface
 - Quick prompt suggestions
 - Message history
 
 ### Mock Trading
+
 - Virtual F-Coins (₹1,00,000 starting balance)
 - 5 stocks + 2 mutual funds
 - Live portfolio tracking
 - Buy orders (sell coming soon)
 
 ### Gamification
+
 - Badge system
 - Achievement tracking
 - Progress indicators
 
 ### Profile
+
 - Editable user information
 - Financial goals display
 - Learning progress tracking
