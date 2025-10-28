@@ -187,9 +187,9 @@ function Layout({ children }) {
       </div>
 
       {/* Main Content */}
-      <div className="hidden lg:block lg:ml-64">
+      <div className="hidden lg:block lg:ml-64 relative">
         {/* Theme Toggle Button - Top Right */}
-        <div className="fixed top-4 right-4 z-40">
+        <div className="absolute top-4 right-4 z-[110]">
           <button
             onClick={toggleTheme}
             className="p-3 rounded-lg bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all shadow-lg"

@@ -28,9 +28,9 @@ function AchievementNotification({ achievement, onClose }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -100, scale: 0.8 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="fixed top-4 right-4 z-[100] max-w-sm"
+          className="fixed top-4 right-4 z-[100] max-w-sm overflow-hidden"
         >
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl shadow-2xl p-6 border-2 border-primary-400">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl shadow-2xl p-6 border-2 border-primary-400 overflow-hidden">
             {/* Confetti animation overlay */}
             <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
               {[...Array(20)].map((_, i) => (
@@ -92,7 +92,7 @@ function AchievementNotification({ achievement, onClose }) {
                 {achievement.icon}
               </motion.div>
 
-              <div className="flex-1">
+              <div className="flex-1 overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
                   <Award className="w-5 h-5" />
                   <h3 className="font-display font-bold text-lg">
