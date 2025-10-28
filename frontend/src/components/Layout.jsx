@@ -114,11 +114,6 @@ function Layout({ children }) {
             alt="Finity"
             className="w-16 h-16 mx-auto mb-4"
           />
-          <img
-            src="/finityLogoText.png"
-            alt="Finity"
-            className="h-8 mx-auto mb-4"
-          />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
             experience.

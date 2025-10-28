@@ -35,11 +35,6 @@ function Signup() {
             alt="Finity"
             className="w-16 h-16 mx-auto mb-4"
           />
-          <img
-            src="/finityLogoText.png"
-            alt="Finity"
-            className="h-8 mx-auto mb-4"
-          />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
             experience.
@@ -53,10 +48,11 @@ function Signup() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <img src="/finityLogo.png" alt="Finity" className="w-16 h-16" />
-              <img src="/finityLogoText.png" alt="Finity" className="h-10" />
-            </div>
+            <img
+              src="/finityLogoText.png"
+              alt="Finity"
+              className="h-12 mx-auto mb-4"
+            />
             <p className="text-gray-400">Start your financial journey</p>
           </div>
 
