@@ -13,7 +13,7 @@ from database.database import create_db_and_tables, get_db
 from database import crud, schemas
 from auth.auth_service import create_access_token, verify_password, get_current_user_email
 from auth.auth_service import ACCESS_TOKEN_EXPIRE_MINUTES
-from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, generate_financial_summary, get_chat_response, execute_investment_simulation, get_mock_asset_history
+from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, generate_financial_summary, get_chat_response, execute_investment_simulation, get_mock_asset_history, generate_next_lesson
 
 # --- APP INITIALIZATION ---
 load_dotenv()
@@ -102,10 +102,10 @@ def create_expense(
     db: Session = Depends(get_db),
     current_user_email: str = Depends(get_current_user_email)
 ):
-    """Fast Expense Logging: Logs a new expense for the current user."""
     user = crud.get_user_by_email(db, email=current_user_email)
     if not user: raise HTTPException(status_code=404, detail="User not found")
     
+    # MODIFICATION: Pass the expense object directly (Pydantic handles the Optional field)
     return crud.create_expense(db=db, expense=expense, user_id=user.id)
 
 # --- 3. AI & SUMMARY ROUTES (Core Innovation) ---
@@ -126,25 +126,51 @@ def get_user_streak(
 
 @app.get("/market/live-feed", tags=["AI"])
 def get_mock_market_feed(
+    db: Session = Depends(get_db), 
     current_user_email: str = Depends(get_current_user_email)
 ):
     """
-    Mocks a real-time market feed and paper trading portfolio summary.
-    This demonstrates the capability without real API integration.
+    Fetches the user's actual portfolio holdings from the DB and calculates
+    their real-time mocked value (Paper Trading).
     """
-    # NOTE: This uses hardcoded, structured data for a compelling frontend demo.
+    user = crud.get_user_by_email(db, email=current_user_email)
+    if not user: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
-    mock_data = {
-        "portfolio_name": "Frugal Growth Portfolio (Paper)",
-        "current_return_percent": "+4.8%", # Mocked data
-        "current_market_data": [
-            {"symbol": "MSFT", "price": 400.25, "change": "+1.2%", "shares": 10},
-            {"symbol": "GOOG", "price": 175.50, "change": "-0.5%", "shares": 15},
-            {"symbol": "TSLA", "price": 190.10, "change": "+0.8%", "shares": 5},
-        ],
+    # 1. Retrieve the user's held assets
+    holdings = crud.get_user_portfolio_holdings(db, user.id)
+    
+    portfolio_summary = []
+    total_market_value = 0.0
+
+    for asset in holdings:
+        # 2. Get the current mock price from the stable source (defined in crud.py)
+        current_price = crud.get_current_mock_price(asset.symbol)
+        
+        # 3. Calculate metrics
+        current_value = asset.shares * current_price
+        total_market_value += current_value
+        
+        # Calculate Gain/Loss Percentage
+        if asset.average_cost > 0:
+            gain_loss_percent = ((current_price - asset.average_cost) / asset.average_cost) * 100
+        else:
+            gain_loss_percent = 0.0
+            
+        portfolio_summary.append({
+            "symbol": asset.symbol,
+            "shares": round(asset.shares, 4),
+            "current_price": round(current_price, 2),
+            "average_cost": round(asset.average_cost, 2),
+            "current_value": round(current_value, 2),
+            "gain_loss_percent": round(gain_loss_percent, 2)
+        })
+
+    # 4. Return the dynamic summary
+    return {
+        "total_portfolio_value": round(total_market_value, 2),
+        "holdings": portfolio_summary,
         "last_update": datetime.now().isoformat()
     }
-    return mock_data
 
 # main.py (Add to Section 3: AI & SUMMARY ROUTES)
 
@@ -186,21 +212,35 @@ def handle_chat(
 @app.post("/simulate/invest/action", tags=["AI"])
 def simulate_investment_action(
     action_data: schemas.InvestmentAction,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db), 
     current_user_email: str = Depends(get_current_user_email)
 ):
-    """Simulates a buy/sell action like a real trading platform and returns status."""
     user = crud.get_user_by_email(db, email=current_user_email)
-    if not user: raise HTTPException(status_code=404, detail="User not found")
+    if not user: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
-    # Execute the AI agent
-    transaction_status = execute_investment_simulation(user.id, action_data)
+    transaction_status = execute_investment_simulation(user.id, action_data.model_dump())
     
-    # NOTE: You would save the status to the SimulatorSession table here
-    
+    # 1. CRITICAL: If successful, attempt the database transaction
+    if transaction_status.get('status') == 'success':
+        try:
+            # If the commit succeeds, the code continues.
+            crud.update_portfolio_shares(
+                db, 
+                user_id=user.id, 
+                symbol=action_data.symbol, 
+                amount=action_data.amount, 
+                action=action_data.action
+            )
+        except HTTPException as e:
+            # CATCH: If CRUD raises an HTTPException (e.g., "Cannot sell more shares"), 
+            # we re-raise it here. FastAPI will automatically return the correct 400 status.
+            raise e # Re-raise the exception to send the 400/500 status back to the client
+
+    # If the AI failed (status != success), or if the DB update succeeded, 
+    # we return the transaction_status.
     return transaction_status
 
-@app.post("/simulate/invest", tags=["AI"])
+@app.post("/simulate/invest/learn", tags=["AI"])
 def simulate_investment(
     simulation_input: schemas.SimulatorInput, 
     db: Session = Depends(get_db),
@@ -294,10 +334,63 @@ def calculate_consecutive_days_logged(db: Session, user_id: int) -> int:
         
     return streak
 
+@app.get("/course/next-lesson", response_model=schemas.LessonContent, tags=["AI"])
+def get_next_lesson_route(db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, email=current_user_email)
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+        
+    lesson_data = generate_next_lesson(
+        user_data={"fixed_budget": user.fixed_budget, "financial_confidence": user.financial_confidence}, 
+        lesson_index=user.lesson_progress + 1
+    )
+    
+    # Check if the next lesson criteria is met (Backend check)
+    is_unlocked = check_assignment_status(db, user.id, lesson_data['unlock_criteria_key'])
+    
+    return schemas.LessonContent(**lesson_data, is_unlocked=is_unlocked) # Note: Requires adding is_unlocked to LessonContent schema if used
+
+@app.post("/course/complete-lesson", response_model=schemas.User, tags=["AI"])
+def complete_lesson(db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, email=current_user_email)
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if the current assignment is met before advancing
+    current_lesson_index = user.lesson_progress + 1
+    # NOTE: You'd need to fetch the criteria key here first, but for MVP simplicity:
+    # We assume the check function determines criteria based on user data
+    
+    if check_assignment_status(db, user.id, 'consecutive_logs_3'): # Simplified check
+        return crud.advance_user_lesson_progress(db, user.id)
+    else:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Assignment not complete. Keep tracking your expenses!")
+
+def check_assignment_status(db: Session, user_id: int, criteria_key: str) -> bool:
+    """Helper function to check if the assignment criteria is met."""
+    if criteria_key == 'consecutive_logs_3':
+        return crud.calculate_consecutive_days_logged(db, user_id) >= 3
+    if criteria_key == 'simulator_run_min_50':
+        return crud.check_for_min_contribution_session(db, user_id, min_amount=50.0)
+    if criteria_key == 'expense_categories_5':
+        return crud.count_unique_expense_categories(db, user_id) >= 5
+    return False
+
+@app.post("/incomes", response_model=schemas.Income, tags=["Data"])
+def create_income(
+    income: schemas.IncomeCreate,
+    db: Session = Depends(get_db),
+    current_user_email: str = Depends(get_current_user_email)
+):
+    """Logs a new income entry for the current user."""
+    user = crud.get_user_by_email(db, email=current_user_email)
+    if not user: 
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return crud.create_income(db=db, income=income, user_id=user.id)
 
 # --- 4. RUN SERVER (Development Only) ---
 if __name__ == "__main__":
     import uvicorn
     # This command starts the server
+    create_db_and_tables()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
