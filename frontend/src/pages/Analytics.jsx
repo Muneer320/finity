@@ -97,9 +97,33 @@ function Analytics() {
     return last6Months;
   };
 
+  // Calculate expense logging frequency for heatmap (last 90 days)
+  const getHeatmapData = () => {
+    const heatmapData = {};
+    const today = new Date();
+
+    // Initialize last 90 days
+    for (let i = 89; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+      heatmapData[dateStr] = 0;
+    }
+
+    // Count transactions per day
+    transactions.forEach((t) => {
+      if (heatmapData.hasOwnProperty(t.date)) {
+        heatmapData[t.date]++;
+      }
+    });
+
+    return heatmapData;
+  };
+
   const categoryData = getCategoryData();
   const dailyData = getDailyData();
   const monthlyData = getMonthlyTrends();
+  const heatmapData = getHeatmapData();
 
   const totalExpenses = transactions
     .filter((t) => t.type === "expense")
@@ -410,6 +434,209 @@ function Analytics() {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-600 rounded" />
                   <span className="text-sm text-gray-400">Income</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* New Graphs Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 mt-6">
+          {/* Monthly Spending vs Savings */}
+          <div className="card">
+            <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-primary-500" />
+              Monthly Spending vs. Savings
+            </h2>
+
+            {monthlyData.length === 0 ? (
+              <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+                <p>No data available yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {monthlyData.map((month, index) => {
+                  const totalValue = month.expenses + Math.abs(month.savings);
+                  const spendingPercentage =
+                    totalValue > 0 ? (month.expenses / totalValue) * 100 : 50;
+                  const savingsPercentage =
+                    totalValue > 0
+                      ? (Math.abs(month.savings) / totalValue) * 100
+                      : 50;
+
+                  return (
+                    <div key={index}>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {month.month}
+                        </span>
+                        <div className="flex gap-4">
+                          <span className="text-red-500 font-mono">
+                            Spent: ₹{month.expenses.toLocaleString()}
+                          </span>
+                          <span
+                            className={`font-mono ${
+                              month.savings >= 0
+                                ? "text-green-500"
+                                : "text-orange-500"
+                            }`}
+                          >
+                            Saved: ₹{month.savings.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 h-8 rounded-lg overflow-hidden">
+                        <div
+                          className="bg-red-600 flex items-center justify-center text-white text-xs font-bold transition-all hover:bg-red-500"
+                          style={{ width: `${spendingPercentage}%` }}
+                        >
+                          {spendingPercentage > 15 &&
+                            `${spendingPercentage.toFixed(0)}%`}
+                        </div>
+                        <div
+                          className={`${
+                            month.savings >= 0
+                              ? "bg-green-600 hover:bg-green-500"
+                              : "bg-orange-600 hover:bg-orange-500"
+                          } flex items-center justify-center text-white text-xs font-bold transition-all`}
+                          style={{ width: `${savingsPercentage}%` }}
+                        >
+                          {savingsPercentage > 15 &&
+                            `${savingsPercentage.toFixed(0)}%`}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="flex justify-center gap-6 mt-6 pt-4 border-t border-gray-200 dark:border-dark-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-600 rounded" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Spending
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-600 rounded" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Savings
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Expense Logging Frequency - Calendar Heatmap */}
+          <div className="card">
+            <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <Calendar className="w-6 h-6 text-primary-500" />
+              Expense Logging Habit (Last 90 Days)
+            </h2>
+
+            <div>
+              {/* Heatmap Grid */}
+              <div className="space-y-2">
+                {/* Generate 13 weeks (90 days) */}
+                {Array.from({ length: 13 }, (_, weekIndex) => {
+                  const today = new Date();
+                  const startDay = 89 - weekIndex * 7;
+
+                  return (
+                    <div key={weekIndex} className="flex gap-1 items-center">
+                      {weekIndex === 0 && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right mr-2">
+                          Week
+                        </span>
+                      )}
+                      {weekIndex > 0 && <div className="w-8 mr-2" />}
+
+                      {Array.from({ length: 7 }, (_, dayIndex) => {
+                        const dayOffset = startDay - dayIndex;
+                        if (dayOffset < 0) return null;
+
+                        const date = new Date(today);
+                        date.setDate(date.getDate() - dayOffset);
+                        const dateStr = date.toISOString().split("T")[0];
+                        const count = heatmapData[dateStr] || 0;
+
+                        // Color intensity based on transaction count
+                        let colorClass = "bg-gray-200 dark:bg-dark-800";
+                        if (count >= 5) colorClass = "bg-green-600";
+                        else if (count >= 3) colorClass = "bg-green-500";
+                        else if (count >= 2) colorClass = "bg-green-400";
+                        else if (count >= 1) colorClass = "bg-green-300";
+
+                        return (
+                          <div
+                            key={dayIndex}
+                            className={`w-3 h-3 rounded-sm ${colorClass} transition-all hover:scale-125 cursor-pointer relative group`}
+                            title={`${dateStr}: ${count} transaction${
+                              count !== 1 ? "s" : ""
+                            }`}
+                          >
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-dark-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              {date.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                              : {count} log{count !== 1 ? "s" : ""}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-dark-700">
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  Less
+                </span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-3 bg-gray-200 dark:bg-dark-800 rounded-sm" />
+                  <div className="w-3 h-3 bg-green-300 rounded-sm" />
+                  <div className="w-3 h-3 bg-green-400 rounded-sm" />
+                  <div className="w-3 h-3 bg-green-500 rounded-sm" />
+                  <div className="w-3 h-3 bg-green-600 rounded-sm" />
+                </div>
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  More
+                </span>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-dark-700">
+                <div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Active Days
+                  </p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {
+                      Object.values(heatmapData).filter((count) => count > 0)
+                        .length
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Avg. per Active Day
+                  </p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {(
+                      Object.values(heatmapData).reduce(
+                        (sum, count) => sum + count,
+                        0
+                      ) /
+                      Math.max(
+                        Object.values(heatmapData).filter((count) => count > 0)
+                          .length,
+                        1
+                      )
+                    ).toFixed(1)}
+                  </p>
                 </div>
               </div>
             </div>
