@@ -1,6 +1,9 @@
 fastapi[all]
 uvicorn
 pydantic
-sqlalchemy  
-python-dotenv 
-google-genai   
+sqlalchemy
+python-dotenv
+psycopg2-binary
+passlib[bcrypt]
+python-jose[cryptography]
+google-genai
