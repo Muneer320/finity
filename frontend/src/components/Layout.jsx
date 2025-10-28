@@ -218,7 +218,7 @@ function Layout({ children }) {
         >
           <div
             className="bg-white dark:bg-dark-900 rounded-xl p-8 max-w-4xl w-full mx-4 border border-gray-200 dark:border-dark-800 max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">

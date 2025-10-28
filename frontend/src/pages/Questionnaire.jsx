@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle, TrendingUp } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
 
 function Questionnaire({ setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();
@@ -62,8 +62,8 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
       {/* Mobile Warning */}
       <div className="lg:hidden fixed inset-0 bg-dark-950 flex items-center justify-center p-8 z-50">
         <div className="text-center">
-          <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary-500" />
-          <h1 className="text-2xl font-display font-bold mb-2">Finity</h1>
+          <img src="/finityLogo.png" alt="Finity" className="w-16 h-16 mx-auto mb-4" />
+          <img src="/finityLogoText.png" alt="Finity" className="h-8 mx-auto mb-4" />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
             experience.
