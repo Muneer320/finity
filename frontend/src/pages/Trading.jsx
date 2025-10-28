@@ -12,8 +12,17 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAchievement } from "../context/AchievementContext";
+import {
+  awardAchievement,
+  ACHIEVEMENT_TYPES,
+  incrementTradeCount,
+  checkDiamondHands,
+  checkTradingPro,
+} from "../utils/achievementManager";
 
 function Trading() {
+  const { showAchievement } = useAchievement();
   const [balance, setBalance] = useState(100000); // Starting F-Coins
   const [selectedStock, setSelectedStock] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -188,18 +197,34 @@ function Trading() {
 
     setBalance(balance - totalCost);
 
-    // Award achievement for first trade
-    const achievements = JSON.parse(
-      localStorage.getItem("achievements") || "[]"
-    );
-    if (!achievements.some((a) => a.name === "First Trade")) {
-      achievements.push({
-        icon: "📈",
-        name: "First Trade",
-        description: "Executed your first mock trade!",
-        date: new Date().toISOString(),
-      });
-      localStorage.setItem("achievements", JSON.stringify(achievements));
+    // Increment trade count and check for achievements
+    incrementTradeCount();
+
+    // Award First Trade achievement
+    const firstTradeAchievement = {
+      icon: "📈",
+      name: ACHIEVEMENT_TYPES.FIRST_TRADE,
+      description: "Executed your first mock trade!",
+    };
+    const awardedFirstTrade = awardAchievement(firstTradeAchievement);
+    if (awardedFirstTrade) {
+      showAchievement(firstTradeAchievement);
+    }
+
+    // Check Trading Pro achievement (50+ trades)
+    const tradingProAchievement = checkTradingPro();
+    if (tradingProAchievement) {
+      showAchievement(tradingProAchievement);
+    }
+
+    // Calculate new portfolio value and check Diamond Hands
+    const newPortfolioValue = [
+      ...portfolio,
+      { ...selectedStock, quantity, boughtAt: selectedStock.price },
+    ].reduce((sum, holding) => sum + holding.price * holding.quantity, 0);
+    const diamondHandsAchievement = checkDiamondHands(newPortfolioValue);
+    if (diamondHandsAchievement) {
+      showAchievement(diamondHandsAchievement);
     }
 
     setSelectedStock(null);
@@ -242,6 +267,25 @@ function Trading() {
 
     setPortfolio(updatedPortfolio);
     setBalance(balance + saleValue);
+
+    // Increment trade count and check for achievements
+    incrementTradeCount();
+
+    // Check Trading Pro achievement (50+ trades)
+    const tradingProAchievement = checkTradingPro();
+    if (tradingProAchievement) {
+      showAchievement(tradingProAchievement);
+    }
+
+    // Calculate new portfolio value and check Diamond Hands
+    const newPortfolioValue = updatedPortfolio.reduce(
+      (sum, holding) => sum + holding.price * holding.quantity,
+      0
+    );
+    const diamondHandsAchievement = checkDiamondHands(newPortfolioValue);
+    if (diamondHandsAchievement) {
+      showAchievement(diamondHandsAchievement);
+    }
 
     setSelectedHolding(null);
     setQuantity(1);

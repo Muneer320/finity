@@ -1,6 +1,11 @@
 import Layout from "../components/Layout";
 import { Send, Bot, User, Sparkles } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useAchievement } from "../context/AchievementContext";
+import {
+  awardAchievement,
+  ACHIEVEMENT_TYPES,
+} from "../utils/achievementManager";
 
 function ChatBot() {
   const [messages, setMessages] = useState([
@@ -14,6 +19,7 @@ function ChatBot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const { showAchievement } = useAchievement();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -55,17 +61,14 @@ function ChatBot() {
       setIsLoading(false);
 
       // Award achievement for first chat
-      const achievements = JSON.parse(
-        localStorage.getItem("achievements") || "[]"
-      );
-      if (!achievements.some((a) => a.name === "First Chat")) {
-        achievements.push({
-          icon: "💬",
-          name: "First Chat",
-          description: "Asked your first question!",
-          date: new Date().toISOString(),
-        });
-        localStorage.setItem("achievements", JSON.stringify(achievements));
+      const firstChatAchievement = {
+        icon: "💬",
+        name: ACHIEVEMENT_TYPES.FIRST_CHAT,
+        description: "Asked your first question!",
+      };
+      const awarded = awardAchievement(firstChatAchievement);
+      if (awarded) {
+        showAchievement(firstChatAchievement);
       }
     }, 1500);
   };

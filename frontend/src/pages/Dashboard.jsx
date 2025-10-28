@@ -9,13 +9,23 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAchievement } from "../context/AchievementContext";
+import {
+  awardAchievement,
+  ACHIEVEMENT_TYPES,
+  recordLogin,
+} from "../utils/achievementManager";
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
+  const { showAchievement } = useAchievement();
 
   useEffect(() => {
     const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
     setUserData(profile);
+
+    // Record login for streak tracking
+    recordLogin();
 
     // Award first achievement on dashboard visit
     const achievements = JSON.parse(
@@ -24,13 +34,15 @@ function Dashboard() {
     if (achievements.length === 0) {
       const firstAchievement = {
         icon: "🎉",
-        name: "Getting Started",
+        name: ACHIEVEMENT_TYPES.GETTING_STARTED,
         description: "Completed your profile!",
-        date: new Date().toISOString(),
       };
-      localStorage.setItem("achievements", JSON.stringify([firstAchievement]));
+      const awarded = awardAchievement(firstAchievement);
+      if (awarded) {
+        showAchievement(firstAchievement);
+      }
     }
-  }, []);
+  }, [showAchievement]);
 
   const stats = [
     {

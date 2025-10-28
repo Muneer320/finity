@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { AchievementProvider } from "./context/AchievementContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Questionnaire from "./pages/Questionnaire";
@@ -45,84 +46,86 @@ function App() {
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/login"
-          element={<Login setIsAuthenticated={setIsAuthenticated} />}
-        />
-        <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/questionnaire"
-          element={
-            isAuthenticated ? (
-              <Questionnaire
-                setHasCompletedQuestionnaire={setHasCompletedQuestionnaire}
-              />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <PrivateRoute>
-              <ChatBot />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/trading"
-          element={
-            <PrivateRoute>
-              <Trading />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/courses"
-          element={
-            <PrivateRoute>
-              <MicroCourse />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/expenses"
-          element={
-            <PrivateRoute>
-              <Expenses />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <PrivateRoute>
-              <Analytics />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <Profile />
-            </PrivateRoute>
-          }
-        />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-      </Routes>
-    </Router>
+    <AchievementProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/login"
+            element={<Login setIsAuthenticated={setIsAuthenticated} />}
+          />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/questionnaire"
+            element={
+              isAuthenticated ? (
+                <Questionnaire
+                  setHasCompletedQuestionnaire={setHasCompletedQuestionnaire}
+                />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <PrivateRoute>
+                <ChatBot />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/trading"
+            element={
+              <PrivateRoute>
+                <Trading />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/courses"
+            element={
+              <PrivateRoute>
+                <MicroCourse />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <PrivateRoute>
+                <Expenses />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <PrivateRoute>
+                <Analytics />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </Router>
+    </AchievementProvider>
   );
 }
 

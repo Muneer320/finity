@@ -8,8 +8,14 @@ import {
   Award,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAchievement } from "../context/AchievementContext";
+import {
+  awardAchievement,
+  ACHIEVEMENT_TYPES,
+} from "../utils/achievementManager";
 
 function MicroCourse() {
+  const { showAchievement } = useAchievement();
   const [completedLessons, setCompletedLessons] = useState([]);
   const [selectedLesson, setSelectedLesson] = useState(null);
 
@@ -238,34 +244,29 @@ function MicroCourse() {
       localStorage.setItem("completedLessons", JSON.stringify(updated));
 
       // Award achievement for completing first course
-      const achievements = JSON.parse(
-        localStorage.getItem("achievements") || "[]"
-      );
-      if (
-        updated.length === 1 &&
-        !achievements.some((a) => a.name === "Knowledge Seeker")
-      ) {
-        achievements.push({
+      if (updated.length === 1) {
+        const knowledgeSeekerAchievement = {
           icon: "📚",
-          name: "Knowledge Seeker",
+          name: ACHIEVEMENT_TYPES.KNOWLEDGE_SEEKER,
           description: "Completed your first micro course!",
-          date: new Date().toISOString(),
-        });
-        localStorage.setItem("achievements", JSON.stringify(achievements));
+        };
+        const awarded = awardAchievement(knowledgeSeekerAchievement);
+        if (awarded) {
+          showAchievement(knowledgeSeekerAchievement);
+        }
       }
 
       // Award achievement for completing 3 courses
-      if (
-        updated.length === 3 &&
-        !achievements.some((a) => a.name === "Learning Master")
-      ) {
-        achievements.push({
+      if (updated.length === 3) {
+        const learningMasterAchievement = {
           icon: "🎓",
-          name: "Learning Master",
+          name: ACHIEVEMENT_TYPES.LEARNING_MASTER,
           description: "Completed 3 micro courses!",
-          date: new Date().toISOString(),
-        });
-        localStorage.setItem("achievements", JSON.stringify(achievements));
+        };
+        const awarded = awardAchievement(learningMasterAchievement);
+        if (awarded) {
+          showAchievement(learningMasterAchievement);
+        }
       }
     }
   };

@@ -9,8 +9,14 @@ import {
   Filter,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAchievement } from "../context/AchievementContext";
+import {
+  awardAchievement,
+  ACHIEVEMENT_TYPES,
+} from "../utils/achievementManager";
 
 function Expenses() {
+  const { showAchievement } = useAchievement();
   const [transactions, setTransactions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterType, setFilterType] = useState("all"); // all, income, expense
@@ -62,17 +68,14 @@ function Expenses() {
     localStorage.setItem("transactions", JSON.stringify(updated));
 
     // Award achievement for first transaction
-    const achievements = JSON.parse(
-      localStorage.getItem("achievements") || "[]"
-    );
-    if (!achievements.some((a) => a.name === "Money Manager")) {
-      achievements.push({
-        icon: "💰",
-        name: "Money Manager",
-        description: "Logged your first transaction!",
-        date: new Date().toISOString(),
-      });
-      localStorage.setItem("achievements", JSON.stringify(achievements));
+    const moneyManagerAchievement = {
+      icon: "💰",
+      name: ACHIEVEMENT_TYPES.MONEY_MANAGER,
+      description: "Logged your first transaction!",
+    };
+    const awarded = awardAchievement(moneyManagerAchievement);
+    if (awarded) {
+      showAchievement(moneyManagerAchievement);
     }
 
     setFormData({
