@@ -1,8 +1,6 @@
-fastapi
-uvicorn[standard]
+fastapi[all]
+uvicorn
 pydantic
-python-dotenv
-# For LLM integration
-google-genai # Or openai, etc. based on your final choice
-# For DB - We'll stick to a simple file-based SQLite
-SQLAlchemy
+sqlalchemy  
+python-dotenv 
+google-genai   
