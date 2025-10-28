@@ -2,4 +2,3 @@
 
 This module handles database connections and operations.
 """
-

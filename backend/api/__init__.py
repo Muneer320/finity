@@ -6,4 +6,3 @@ Modules:
 - expenses.py - Expense tracking endpoints
 - coach.py - AI coaching endpoints
 """
-
