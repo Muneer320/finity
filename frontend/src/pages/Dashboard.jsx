@@ -83,10 +83,10 @@ function Dashboard() {
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">
+          <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
             Welcome back! 👋
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Here's an overview of your financial journey
           </p>
         </div>
@@ -108,13 +108,17 @@ function Dashboard() {
                   )}
                 </div>
                 <div>
-                  <p className="text-gray-400 text-sm mb-1">{stat.name}</p>
-                  <p className="text-2xl font-display font-bold mb-1">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">
+                    {stat.name}
+                  </p>
+                  <p className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-1">
                     {stat.value}
                   </p>
                   <p
                     className={`text-sm ${
-                      stat.positive ? "text-green-500" : "text-gray-500"
+                      stat.positive
+                        ? "text-green-500"
+                        : "text-gray-600 dark:text-gray-500"
                     }`}
                   >
                     {stat.change}
@@ -148,8 +152,10 @@ function Dashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Ask AI Coach</h3>
-                <p className="text-sm text-gray-400">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Ask AI Coach
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Get personalized financial advice
                 </p>
               </div>
@@ -165,8 +171,10 @@ function Dashboard() {
                 <TrendingUp className="w-8 h-8 text-green-500 group-hover:text-white transition-all" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Start Trading</h3>
-                <p className="text-sm text-gray-400">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Start Trading
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Practice with mock funds
                 </p>
               </div>
@@ -182,8 +190,12 @@ function Dashboard() {
                 <Award className="w-8 h-8 text-purple-500 group-hover:text-white transition-all" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">View Progress</h3>
-                <p className="text-sm text-gray-400">Track your achievements</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  View Progress
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Track your achievements
+                </p>
               </div>
             </div>
           </a>
@@ -191,23 +203,27 @@ function Dashboard() {
 
         {/* Recent Activity */}
         <div className="card">
-          <h2 className="text-xl font-display font-semibold mb-4">
+          <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-4">
             Recent Activity
           </h2>
           <div className="space-y-4">
             {recentActivity.map((activity, index) => (
               <div
                 key={index}
-                className="flex items-start gap-4 p-4 bg-dark-800 rounded-lg"
+                className="flex items-start gap-4 p-4 bg-gray-100 dark:bg-dark-800 rounded-lg"
               >
                 <div className="text-3xl">{activity.icon}</div>
                 <div className="flex-1">
-                  <h3 className="font-medium mb-1">{activity.title}</h3>
-                  <p className="text-sm text-gray-400">
+                  <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                    {activity.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {activity.description}
                   </p>
                 </div>
-                <span className="text-xs text-gray-500">{activity.time}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-500">
+                  {activity.time}
+                </span>
               </div>
             ))}
           </div>

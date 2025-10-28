@@ -14,6 +14,7 @@ import Trading from "./pages/Trading";
 import Profile from "./pages/Profile";
 import Expenses from "./pages/Expenses";
 import Analytics from "./pages/Analytics";
+import MicroCourse from "./pages/MicroCourse";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -84,6 +85,14 @@ function App() {
           element={
             <PrivateRoute>
               <Trading />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <PrivateRoute>
+              <MicroCourse />
             </PrivateRoute>
           }
         />

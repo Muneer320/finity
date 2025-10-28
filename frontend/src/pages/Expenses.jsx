@@ -110,10 +110,12 @@ function Expenses() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold mb-2">
+            <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
               Expenses & Earnings
             </h1>
-            <p className="text-gray-400">Track your income and expenses</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Track your income and expenses
+            </p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
@@ -131,7 +133,9 @@ function Expenses() {
               <div className="p-3 bg-green-600/10 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-green-500" />
               </div>
-              <span className="text-gray-400 text-sm">Total Income</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Income
+              </span>
             </div>
             <p className="text-3xl font-display font-bold text-green-500">
               ₹{totalIncome.toLocaleString()}
@@ -143,7 +147,9 @@ function Expenses() {
               <div className="p-3 bg-red-600/10 rounded-lg">
                 <TrendingDown className="w-6 h-6 text-red-500" />
               </div>
-              <span className="text-gray-400 text-sm">Total Expenses</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Expenses
+              </span>
             </div>
             <p className="text-3xl font-display font-bold text-red-500">
               ₹{totalExpense.toLocaleString()}
@@ -155,7 +161,9 @@ function Expenses() {
               <div className="p-3 bg-primary-600/10 rounded-lg">
                 <DollarSign className="w-6 h-6 text-primary-500" />
               </div>
-              <span className="text-gray-400 text-sm">Net Balance</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Net Balance
+              </span>
             </div>
             <p
               className={`text-3xl font-display font-bold ${
@@ -170,14 +178,14 @@ function Expenses() {
         {/* Filters */}
         <div className="card mb-6">
           <div className="flex items-center gap-4">
-            <Filter className="w-5 h-5 text-gray-400" />
+            <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterType("all")}
                 className={`px-4 py-2 rounded-lg transition-all ${
                   filterType === "all"
                     ? "bg-primary-600 text-white"
-                    : "bg-dark-800 text-gray-400 hover:bg-dark-700"
+                    : "bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-700"
                 }`}
               >
                 All
@@ -187,7 +195,7 @@ function Expenses() {
                 className={`px-4 py-2 rounded-lg transition-all ${
                   filterType === "income"
                     ? "bg-green-600 text-white"
-                    : "bg-dark-800 text-gray-400 hover:bg-dark-700"
+                    : "bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-700"
                 }`}
               >
                 Income
@@ -197,7 +205,7 @@ function Expenses() {
                 className={`px-4 py-2 rounded-lg transition-all ${
                   filterType === "expense"
                     ? "bg-red-600 text-white"
-                    : "bg-dark-800 text-gray-400 hover:bg-dark-700"
+                    : "bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-700"
                 }`}
               >
                 Expenses
@@ -208,12 +216,12 @@ function Expenses() {
 
         {/* Transactions List */}
         <div className="card">
-          <h2 className="text-xl font-display font-semibold mb-4">
+          <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-4">
             Recent Transactions
           </h2>
 
           {filteredTransactions.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-gray-600 dark:text-gray-400">
               <DollarSign className="w-16 h-16 mx-auto mb-4 opacity-30" />
               <p>No transactions yet</p>
               <p className="text-sm mt-1">
@@ -225,7 +233,7 @@ function Expenses() {
               {filteredTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 bg-dark-800 rounded-lg hover:bg-dark-700 transition-all"
+                  className="flex items-center justify-between p-4 bg-gray-100 dark:bg-dark-800 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-700 transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div
@@ -242,15 +250,17 @@ function Expenses() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{transaction.category}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {transaction.category}
+                      </p>
                       {transaction.description && (
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {transaction.description}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
-                        <Calendar className="w-3 h-3 text-gray-500" />
-                        <span className="text-xs text-gray-500">
+                        <Calendar className="w-3 h-3 text-gray-500 dark:text-gray-500" />
+                        <span className="text-xs text-gray-500 dark:text-gray-500">
                           {new Date(transaction.date).toLocaleDateString()}
                         </span>
                       </div>
@@ -269,7 +279,7 @@ function Expenses() {
                     </p>
                     <button
                       onClick={() => handleDelete(transaction.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 transition-all"
+                      className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-all"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -287,16 +297,16 @@ function Expenses() {
             onClick={() => setShowAddModal(false)}
           >
             <div
-              className="bg-dark-900 rounded-xl p-6 max-w-md w-full border border-dark-800"
+              className="bg-white dark:bg-dark-900 rounded-xl p-6 max-w-md w-full border border-gray-300 dark:border-dark-800"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-2xl font-display font-bold mb-6">
+              <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-6">
                 Add Transaction
               </h3>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Type
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -312,7 +322,7 @@ function Expenses() {
                       className={`py-3 rounded-lg border-2 transition-all ${
                         formData.type === "income"
                           ? "border-green-600 bg-green-600/10 text-green-500"
-                          : "border-dark-700 text-gray-400"
+                          : "border-gray-300 dark:border-dark-700 text-gray-700 dark:text-gray-400"
                       }`}
                     >
                       Income
@@ -329,7 +339,7 @@ function Expenses() {
                       className={`py-3 rounded-lg border-2 transition-all ${
                         formData.type === "expense"
                           ? "border-red-600 bg-red-600/10 text-red-500"
-                          : "border-dark-700 text-gray-400"
+                          : "border-gray-300 dark:border-dark-700 text-gray-700 dark:text-gray-400"
                       }`}
                     >
                       Expense

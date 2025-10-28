@@ -57,10 +57,10 @@ function Profile() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-display font-bold mb-2">
+            <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
               Your Profile
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400">
               Manage your personal and financial information
             </p>
           </div>
@@ -98,7 +98,7 @@ function Profile() {
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-6">
+              <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6">
                 Basic Information
               </h2>
 
@@ -107,7 +107,7 @@ function Profile() {
                   const Icon = stat.icon;
                   return (
                     <div key={stat.label}>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                         {stat.label}
                       </label>
                       {isEditing && stat.label === "Age" ? (
@@ -161,13 +161,13 @@ function Profile() {
 
             {/* Financial Info */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-6">
+              <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6">
                 Financial Details
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                     Monthly Expenses
                   </label>
                   {isEditing ? (
@@ -183,8 +183,8 @@ function Profile() {
                       className="input-field"
                     />
                   ) : (
-                    <div className="p-4 bg-dark-800 rounded-lg">
-                      <span className="font-mono font-medium">
+                    <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                      <span className="font-mono font-medium text-gray-900 dark:text-white">
                         ₹{userData.monthlyExpenses}
                       </span>
                     </div>
@@ -192,22 +192,22 @@ function Profile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                     Current Savings
                   </label>
-                  <div className="p-4 bg-dark-800 rounded-lg">
-                    <span className="font-medium capitalize">
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-white capitalize">
                       {userData.savings}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                     Loans
                   </label>
-                  <div className="p-4 bg-dark-800 rounded-lg">
-                    <span className="font-medium capitalize">
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-white capitalize">
                       {userData.loans === "yes"
                         ? `Yes - ₹${userData.loanAmount}`
                         : "No active loans"}
@@ -216,11 +216,11 @@ function Profile() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                     Current Investments
                   </label>
-                  <div className="p-4 bg-dark-800 rounded-lg">
-                    <span className="font-medium capitalize">
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-white capitalize">
                       {userData.investments}
                     </span>
                   </div>
@@ -230,7 +230,7 @@ function Profile() {
 
             {/* Goals */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-6 flex items-center gap-2">
+              <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <Target className="w-6 h-6 text-primary-500" />
                 Financial Goals
               </h2>
@@ -252,17 +252,19 @@ function Profile() {
           <div className="space-y-6">
             {/* Achievements */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-6 flex items-center gap-2">
+              <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <Award className="w-6 h-6 text-yellow-500" />
                 Achievements
               </h2>
 
               <div className="space-y-3">
-                <div className="p-4 bg-dark-800 rounded-lg text-center">
+                <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg text-center">
                   <div className="text-4xl font-display font-bold text-primary-500 mb-1">
                     {badges.length}
                   </div>
-                  <div className="text-sm text-gray-400">Badges Earned</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Badges Earned
+                  </div>
                 </div>
 
                 {badges.length > 0 && (
@@ -270,10 +272,10 @@ function Profile() {
                     {badges.slice(0, 4).map((badge, index) => (
                       <div
                         key={index}
-                        className="p-3 bg-dark-800 rounded-lg text-center"
+                        className="p-3 bg-gray-100 dark:bg-dark-800 rounded-lg text-center"
                       >
                         <div className="text-3xl mb-1">{badge.icon}</div>
-                        <div className="text-xs font-medium truncate">
+                        <div className="text-xs font-medium text-gray-900 dark:text-white truncate">
                           {badge.name}
                         </div>
                       </div>
@@ -282,7 +284,7 @@ function Profile() {
                 )}
 
                 {badges.length > 4 && (
-                  <div className="text-center text-sm text-gray-400">
+                  <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                     +{badges.length - 4} more badges
                   </div>
                 )}
@@ -291,17 +293,21 @@ function Profile() {
 
             {/* Learning Progress */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-6">
+              <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6">
                 Learning Progress
               </h2>
 
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-400">Finance Basics</span>
-                    <span className="font-medium">25%</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Finance Basics
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      25%
+                    </span>
                   </div>
-                  <div className="w-full bg-dark-800 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-dark-800 rounded-full h-2">
                     <div
                       className="bg-primary-600 h-2 rounded-full"
                       style={{ width: "25%" }}
@@ -311,10 +317,14 @@ function Profile() {
 
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-400">Investment Skills</span>
-                    <span className="font-medium">10%</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Investment Skills
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      10%
+                    </span>
                   </div>
-                  <div className="w-full bg-dark-800 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-dark-800 rounded-full h-2">
                     <div
                       className="bg-green-600 h-2 rounded-full"
                       style={{ width: "10%" }}

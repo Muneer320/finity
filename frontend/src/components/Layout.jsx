@@ -8,8 +8,10 @@ import {
   Award,
   DollarSign,
   BarChart3,
+  Lock,
   Sun,
   Moon,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
@@ -23,7 +25,8 @@ function Layout({ children }) {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "AI Coach", href: "/chat", icon: MessageSquare },
-    { name: "Mock Trading", href: "/trading", icon: TrendingUp },
+    { name: "FinityArena", href: "/trading", icon: TrendingUp },
+    { name: "Micro Courses", href: "/courses", icon: BookOpen },
     { name: "Expenses", href: "/expenses", icon: DollarSign },
     { name: "Analytics", href: "/analytics", icon: BarChart3 },
     { name: "Profile", href: "/profile", icon: User },
@@ -36,6 +39,70 @@ function Layout({ children }) {
   };
 
   const badges = JSON.parse(localStorage.getItem("badges") || "[]");
+
+  // All possible badges in the app
+  const allPossibleBadges = [
+    {
+      icon: "🎉",
+      name: "Getting Started",
+      description: "Completed your profile!",
+      requirement: "Complete the initial questionnaire",
+    },
+    {
+      icon: "💬",
+      name: "First Chat",
+      description: "Asked your first question!",
+      requirement: "Send a message to the AI Coach",
+    },
+    {
+      icon: "📈",
+      name: "First Trade",
+      description: "Made your first trade!",
+      requirement: "Buy a stock or mutual fund",
+    },
+    {
+      icon: "💰",
+      name: "Money Manager",
+      description: "Logged your first transaction!",
+      requirement: "Add an expense or income entry",
+    },
+    {
+      icon: "📚",
+      name: "Knowledge Seeker",
+      description: "Completed your first lesson!",
+      requirement: "Finish any micro course lesson",
+    },
+    {
+      icon: "🎓",
+      name: "Learning Master",
+      description: "Completed 3 courses!",
+      requirement: "Complete 3 micro courses",
+    },
+    {
+      icon: "💎",
+      name: "Diamond Hands",
+      description: "Portfolio worth ₹2L+",
+      requirement: "Grow your trading portfolio to ₹200,000",
+    },
+    {
+      icon: "🔥",
+      name: "Streak Master",
+      description: "7 days of daily activity",
+      requirement: "Use Finity for 7 consecutive days",
+    },
+    {
+      icon: "🎯",
+      name: "Goal Setter",
+      description: "Set your first financial goal",
+      requirement: "Define a savings or investment goal",
+    },
+    {
+      icon: "🏆",
+      name: "Trading Pro",
+      description: "Made 50+ successful trades",
+      requirement: "Complete 50 buy/sell transactions",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
@@ -140,25 +207,37 @@ function Layout({ children }) {
       {/* Badges Modal */}
       {showBadges && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowBadges(false)}
         >
           <div
-            className="bg-white dark:bg-dark-900 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-dark-800"
+            className="bg-white dark:bg-dark-900 rounded-xl p-8 max-w-4xl w-full mx-4 border border-gray-200 dark:border-dark-800 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">
-              Your Badges
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+                Your Achievements
+              </h3>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {badges.length} / {allPossibleBadges.length} Unlocked
+              </div>
+            </div>
 
-            {badges.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-                No badges yet. Complete tasks to earn badges!
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {badges.map((badge, index) => (
-                  <div key={index} className="card text-center p-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {allPossibleBadges.map((badge, index) => {
+                const isUnlocked = badges.some((b) => b.name === badge.name);
+                return (
+                  <div
+                    key={index}
+                    className={`card text-center p-4 relative ${
+                      !isUnlocked ? "opacity-50" : ""
+                    }`}
+                  >
+                    {!isUnlocked && (
+                      <div className="absolute top-2 right-2">
+                        <Lock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      </div>
+                    )}
                     <div className="text-4xl mb-2">{badge.icon}</div>
                     <div className="font-medium text-sm text-gray-900 dark:text-white">
                       {badge.name}
@@ -166,14 +245,19 @@ function Layout({ children }) {
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {badge.description}
                     </div>
+                    {!isUnlocked && badge.requirement && (
+                      <div className="text-xs text-primary-500 mt-2">
+                        🎯 {badge.requirement}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
 
             <button
               onClick={() => setShowBadges(false)}
-              className="btn-secondary w-full mt-4"
+              className="btn-secondary w-full mt-6"
             >
               Close
             </button>

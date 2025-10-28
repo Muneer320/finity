@@ -7,17 +7,23 @@ import {
   Clock,
   Trophy,
   CheckCircle2,
+  Filter,
+  TrendingDown as SellIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Trading() {
-  const [balance] = useState(100000); // Starting F-Coins
+  const [balance, setBalance] = useState(100000); // Starting F-Coins
   const [selectedStock, setSelectedStock] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [portfolio, setPortfolio] = useState([]);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [lastPurchase, setLastPurchase] = useState(null);
+  const [stockFilter, setStockFilter] = useState("all"); // all, positive, negative
+  const [fundFilter, setFundFilter] = useState("all");
+  const [tradeMode, setTradeMode] = useState("buy"); // buy or sell
+  const [selectedHolding, setSelectedHolding] = useState(null);
 
   // Generate mock trend data for stocks
   const generateTrendData = (basePrice, positive) => {
@@ -149,6 +155,8 @@ function Trading() {
       ]);
     }
 
+    setBalance(balance - totalCost);
+
     // Award badge for first trade
     const badges = JSON.parse(localStorage.getItem("badges") || "[]");
     if (!badges.some((b) => b.name === "First Trade")) {
@@ -169,10 +177,51 @@ function Trading() {
       symbol: selectedStock.symbol,
       quantity,
       amount: totalCost,
+      type: "buy",
     });
     setShowSuccessAnimation(true);
 
     // Hide animation after 3 seconds
+    setTimeout(() => {
+      setShowSuccessAnimation(false);
+    }, 3000);
+  };
+
+  const handleSell = () => {
+    if (!selectedHolding || quantity < 1) return;
+
+    const holding = portfolio.find((p) => p.id === selectedHolding.id);
+    if (!holding || quantity > holding.quantity) {
+      alert("Invalid quantity!");
+      return;
+    }
+
+    const saleValue = selectedHolding.price * quantity;
+
+    // Update portfolio
+    const updatedPortfolio = portfolio
+      .map((p) =>
+        p.id === selectedHolding.id
+          ? { ...p, quantity: p.quantity - quantity }
+          : p
+      )
+      .filter((p) => p.quantity > 0);
+
+    setPortfolio(updatedPortfolio);
+    setBalance(balance + saleValue);
+
+    setSelectedHolding(null);
+    setQuantity(1);
+
+    // Show success animation
+    setLastPurchase({
+      symbol: selectedHolding.symbol,
+      quantity,
+      amount: saleValue,
+      type: "sell",
+    });
+    setShowSuccessAnimation(true);
+
     setTimeout(() => {
       setShowSuccessAnimation(false);
     }, 3000);
@@ -249,7 +298,7 @@ function Trading() {
                 transition={{ delay: 0.3 }}
                 className="text-2xl font-display font-bold text-center mb-2 text-gray-900 dark:text-white"
               >
-                Order Successful!
+                {lastPurchase.type === "buy" ? "Purchase" : "Sale"} Successful!
               </motion.h3>
 
               <motion.div
@@ -259,9 +308,16 @@ function Trading() {
                 className="text-center space-y-2"
               >
                 <p className="text-gray-600 dark:text-gray-400">
-                  Successfully purchased
+                  Successfully{" "}
+                  {lastPurchase.type === "buy" ? "purchased" : "sold"}
                 </p>
-                <p className="text-xl font-mono font-bold text-primary-600">
+                <p
+                  className={`text-xl font-mono font-bold ${
+                    lastPurchase.type === "buy"
+                      ? "text-primary-600"
+                      : "text-green-600"
+                  }`}
+                >
                   {lastPurchase.quantity} × {lastPurchase.symbol}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -305,10 +361,12 @@ function Trading() {
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">
-            Mock Trading Platform
+          <h1 className="text-3xl font-display font-bold mb-2 text-gray-900 dark:text-white">
+            FinityArena
           </h1>
-          <p className="text-gray-400">Practice trading with virtual F-Coins</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Practice trading with virtual F-Coins
+          </p>
         </div>
 
         {/* Balance Cards */}
@@ -316,9 +374,11 @@ function Trading() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign className="w-5 h-5 text-primary-500" />
-              <span className="text-gray-400 text-sm">Available Balance</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Available Balance
+              </span>
             </div>
-            <p className="text-2xl font-display font-bold">
+            <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
               ₹{balance.toLocaleString()}
             </p>
           </div>
@@ -326,9 +386,11 @@ function Trading() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-5 h-5 text-green-500" />
-              <span className="text-gray-400 text-sm">Portfolio Value</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Portfolio Value
+              </span>
             </div>
-            <p className="text-2xl font-display font-bold">
+            <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
               ₹{portfolioValue.toLocaleString()}
             </p>
           </div>
@@ -336,9 +398,11 @@ function Trading() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <Trophy className="w-5 h-5 text-yellow-500" />
-              <span className="text-gray-400 text-sm">Total Invested</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Invested
+              </span>
             </div>
-            <p className="text-2xl font-display font-bold">
+            <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
               ₹{totalInvested.toLocaleString()}
             </p>
           </div>
@@ -350,7 +414,9 @@ function Trading() {
               ) : (
                 <TrendingDown className="w-5 h-5 text-red-500" />
               )}
-              <span className="text-gray-400 text-sm">P&L</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                P&L
+              </span>
             </div>
             <p
               className={`text-2xl font-display font-bold ${
@@ -366,90 +432,136 @@ function Trading() {
           {/* Market */}
           <div className="lg:col-span-2 space-y-4">
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-4">
-                Available Stocks
-              </h2>
-              <div className="space-y-3">
-                {stocks.map((stock) => (
-                  <div
-                    key={stock.id}
-                    onClick={() => setSelectedStock(stock)}
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedStock?.id === stock.id
-                        ? "border-primary-600 bg-primary-600/5"
-                        : "border-dark-800 hover:border-dark-700"
-                    }`}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white">
+                  Available Stocks
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value)}
+                    className="text-sm bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg px-3 py-1.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold">
-                            {stock.symbol}
-                          </span>
-                          <span className="badge bg-dark-800 text-gray-400 text-xs">
-                            {stock.category}
-                          </span>
+                    <option value="all">All</option>
+                    <option value="positive">Gainers</option>
+                    <option value="negative">Losers</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {stocks
+                  .filter((stock) => {
+                    if (stockFilter === "positive") return stock.positive;
+                    if (stockFilter === "negative") return !stock.positive;
+                    return true;
+                  })
+                  .map((stock) => (
+                    <div
+                      key={stock.id}
+                      onClick={() => setSelectedStock(stock)}
+                      className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                        selectedStock?.id === stock.id
+                          ? "border-primary-600 bg-primary-600/5"
+                          : "border-gray-200 dark:border-dark-800 hover:border-gray-300 dark:hover:border-dark-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-gray-900 dark:text-white">
+                              {stock.symbol}
+                            </span>
+                            <span className="badge bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-gray-400 text-xs">
+                              {stock.category}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {stock.name}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-400">{stock.name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold">₹{stock.price}</p>
-                        <p
-                          className={`text-sm flex items-center gap-1 ${
-                            stock.positive ? "text-green-500" : "text-red-500"
-                          }`}
-                        >
-                          {stock.positive ? (
-                            <TrendingUp className="w-4 h-4" />
-                          ) : (
-                            <TrendingDown className="w-4 h-4" />
-                          )}
-                          {stock.change}%
-                        </p>
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-gray-900 dark:text-white">
+                            ₹{stock.price}
+                          </p>
+                          <p
+                            className={`text-sm flex items-center gap-1 ${
+                              stock.positive ? "text-green-500" : "text-red-500"
+                            }`}
+                          >
+                            {stock.positive ? (
+                              <TrendingUp className="w-4 h-4" />
+                            ) : (
+                              <TrendingDown className="w-4 h-4" />
+                            )}
+                            {stock.change}%
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
 
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-4">
-                Mutual Funds
-              </h2>
-              <div className="space-y-3">
-                {mutualFunds.map((fund) => (
-                  <div
-                    key={fund.id}
-                    onClick={() => setSelectedStock(fund)}
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedStock?.id === fund.id
-                        ? "border-primary-600 bg-primary-600/5"
-                        : "border-dark-800 hover:border-dark-700"
-                    }`}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white">
+                  Mutual Funds
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <select
+                    value={fundFilter}
+                    onChange={(e) => setFundFilter(e.target.value)}
+                    className="text-sm bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg px-3 py-1.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold">
-                            {fund.symbol}
-                          </span>
-                          <span className="badge bg-purple-600/20 text-purple-400 text-xs">
-                            {fund.category}
-                          </span>
+                    <option value="all">All</option>
+                    <option value="positive">High Returns</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {mutualFunds
+                  .filter((fund) => {
+                    if (fundFilter === "positive") return fund.change > 3;
+                    return true;
+                  })
+                  .map((fund) => (
+                    <div
+                      key={fund.id}
+                      onClick={() => setSelectedStock(fund)}
+                      className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                        selectedStock?.id === fund.id
+                          ? "border-primary-600 bg-primary-600/5"
+                          : "border-gray-200 dark:border-dark-800 hover:border-gray-300 dark:hover:border-dark-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-gray-900 dark:text-white">
+                              {fund.symbol}
+                            </span>
+                            <span className="badge bg-purple-100 dark:bg-purple-600/20 text-purple-600 dark:text-purple-400 text-xs">
+                              {fund.category}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {fund.name}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-400">{fund.name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono font-bold">₹{fund.price}</p>
-                        <p className="text-sm text-green-500 flex items-center gap-1">
-                          <TrendingUp className="w-4 h-4" />
-                          {fund.change}%
-                        </p>
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-gray-900 dark:text-white">
+                            ₹{fund.price}
+                          </p>
+                          <p className="text-sm text-green-500 flex items-center gap-1">
+                            <TrendingUp className="w-4 h-4" />
+                            {fund.change}%
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
@@ -458,18 +570,54 @@ function Trading() {
           <div className="space-y-4">
             {/* Trade Panel */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-4">
+              <h2 className="text-xl font-display font-semibold mb-4 text-gray-900 dark:text-white">
                 Place Order
               </h2>
 
-              {selectedStock ? (
+              {/* Buy/Sell Toggle */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => {
+                    setTradeMode("buy");
+                    setSelectedHolding(null);
+                    setQuantity(1);
+                  }}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                    tradeMode === "buy"
+                      ? "bg-primary-600 text-white"
+                      : "bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  <ShoppingCart className="w-4 h-4 inline mr-2" />
+                  Buy
+                </button>
+                <button
+                  onClick={() => {
+                    setTradeMode("sell");
+                    setSelectedStock(null);
+                    setQuantity(1);
+                  }}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                    tradeMode === "sell"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  <SellIcon className="w-4 h-4 inline mr-2" />
+                  Sell
+                </button>
+              </div>
+
+              {tradeMode === "buy" && selectedStock ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-dark-800 rounded-lg">
-                    <p className="text-sm text-gray-400 mb-1">Selected</p>
-                    <p className="font-mono font-bold text-lg">
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Selected
+                    </p>
+                    <p className="font-mono font-bold text-lg text-gray-900 dark:text-white">
                       {selectedStock.symbol}
                     </p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {selectedStock.name}
                     </p>
                     <p className="font-mono font-bold text-primary-500 mt-2">
@@ -477,8 +625,10 @@ function Trading() {
                     </p>
 
                     {/* Trend Chart */}
-                    <div className="mt-4 border-t border-dark-700 pt-4">
-                      <p className="text-xs text-gray-400 mb-2">30-Day Trend</p>
+                    <div className="mt-4 border-t border-gray-200 dark:border-dark-700 pt-4">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        30-Day Trend
+                      </p>
                       {renderTrendChart(
                         selectedStock.trend,
                         selectedStock.positive
@@ -505,7 +655,7 @@ function Trading() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Quantity
                     </label>
                     <input
@@ -519,16 +669,20 @@ function Trading() {
                     />
                   </div>
 
-                  <div className="p-4 bg-dark-800 rounded-lg">
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-400">Total Cost</span>
-                      <span className="font-mono font-bold">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Total Cost
+                      </span>
+                      <span className="font-mono font-bold text-gray-900 dark:text-white">
                         ₹{(selectedStock.price * quantity).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Available</span>
-                      <span className="font-mono">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Available
+                      </span>
+                      <span className="font-mono text-gray-900 dark:text-white">
                         ₹{balance.toLocaleString()}
                       </span>
                     </div>
@@ -543,22 +697,100 @@ function Trading() {
                     Buy Now
                   </button>
                 </div>
+              ) : tradeMode === "sell" && selectedHolding ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Selling
+                    </p>
+                    <p className="font-mono font-bold text-lg text-gray-900 dark:text-white">
+                      {selectedHolding.symbol}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {selectedHolding.name}
+                    </p>
+                    <p className="font-mono font-bold text-green-600 mt-2">
+                      ₹{selectedHolding.price}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      You own:{" "}
+                      {portfolio.find((p) => p.id === selectedHolding.id)
+                        ?.quantity || 0}{" "}
+                      shares
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Quantity to Sell
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={
+                        portfolio.find((p) => p.id === selectedHolding.id)
+                          ?.quantity || 0
+                      }
+                      value={quantity}
+                      onChange={(e) =>
+                        setQuantity(parseInt(e.target.value) || 1)
+                      }
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Sale Value
+                      </span>
+                      <span className="font-mono font-bold text-green-600">
+                        ₹{(selectedHolding.price * quantity).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Current Balance
+                      </span>
+                      <span className="font-mono text-gray-900 dark:text-white">
+                        ₹{balance.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSell}
+                    className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200"
+                    disabled={
+                      quantity >
+                      (portfolio.find((p) => p.id === selectedHolding.id)
+                        ?.quantity || 0)
+                    }
+                  >
+                    <SellIcon className="w-5 h-5" />
+                    Sell Now
+                  </button>
+                </div>
               ) : (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>Select a stock or fund to trade</p>
+                  <p>
+                    {tradeMode === "buy"
+                      ? "Select a stock or fund to buy"
+                      : "Select a holding to sell"}
+                  </p>
                 </div>
               )}
             </div>
 
             {/* Portfolio */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-4">
+              <h2 className="text-xl font-display font-semibold mb-4 text-gray-900 dark:text-white">
                 Your Holdings
               </h2>
 
               {portfolio.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <p className="text-sm">No holdings yet</p>
                   <p className="text-xs mt-1">
                     Start trading to build your portfolio
@@ -569,19 +801,30 @@ function Trading() {
                   {portfolio.map((holding) => (
                     <div
                       key={holding.id}
-                      className="p-3 bg-dark-800 rounded-lg"
+                      onClick={() => {
+                        setTradeMode("sell");
+                        setSelectedHolding(holding);
+                        setSelectedStock(null);
+                        setQuantity(1);
+                      }}
+                      className={`p-3 bg-gray-100 dark:bg-dark-800 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                        selectedHolding?.id === holding.id &&
+                        tradeMode === "sell"
+                          ? "ring-2 ring-green-600"
+                          : ""
+                      }`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <p className="font-mono font-bold">
+                          <p className="font-mono font-bold text-gray-900 dark:text-white">
                             {holding.symbol}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
                             {holding.quantity} shares
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-mono text-sm">
+                          <p className="font-mono text-sm text-gray-900 dark:text-white">
                             ₹
                             {(
                               holding.price * holding.quantity

@@ -8,22 +8,30 @@ export function useTheme() {
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
+    // Check localStorage first, default to dark
     const saved = localStorage.getItem("theme");
     return saved || "dark";
   });
 
   useEffect(() => {
+    // Save to localStorage
     localStorage.setItem("theme", theme);
 
+    // Apply or remove dark class on html element
+    const root = document.documentElement;
     if (theme === "dark") {
-      document.documentElement.classList.add("dark");
+      root.classList.add("dark");
     } else {
-      document.documentElement.classList.remove("dark");
+      root.classList.remove("dark");
     }
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => {
+      const newTheme = prev === "dark" ? "light" : "dark";
+      console.log("Theme toggled from", prev, "to", newTheme);
+      return newTheme;
+    });
   };
 
   return (

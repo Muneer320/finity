@@ -128,10 +128,10 @@ function Analytics() {
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">
+          <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
             Analytics & Insights
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Visualize your spending patterns and trends
           </p>
         </div>
@@ -141,9 +141,11 @@ function Analytics() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign className="w-5 h-5 text-primary-500" />
-              <span className="text-gray-400 text-sm">Avg. Daily Spending</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Avg. Daily Spending
+              </span>
             </div>
-            <p className="text-2xl font-display font-bold">
+            <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
               ₹
               {dailyData.length > 0
                 ? Math.round(
@@ -157,7 +159,9 @@ function Analytics() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-5 h-5 text-green-500" />
-              <span className="text-gray-400 text-sm">Savings Rate</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Savings Rate
+              </span>
             </div>
             <p className="text-2xl font-display font-bold text-green-500">
               {savingsRate.toFixed(1)}%
@@ -167,9 +171,11 @@ function Analytics() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <BarChart3 className="w-5 h-5 text-yellow-500" />
-              <span className="text-gray-400 text-sm">Top Category</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Top Category
+              </span>
             </div>
-            <p className="text-xl font-display font-bold truncate">
+            <p className="text-xl font-display font-bold text-gray-900 dark:text-white truncate">
               {categoryData[0]?.category || "N/A"}
             </p>
           </div>
@@ -177,9 +183,11 @@ function Analytics() {
           <div className="card">
             <div className="flex items-center gap-3 mb-2">
               <Calendar className="w-5 h-5 text-purple-500" />
-              <span className="text-gray-400 text-sm">Transactions</span>
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                Transactions
+              </span>
             </div>
-            <p className="text-2xl font-display font-bold">
+            <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
               {transactions.length}
             </p>
           </div>
@@ -188,13 +196,13 @@ function Analytics() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Category Breakdown - Pie Chart Style */}
           <div className="card">
-            <h2 className="text-xl font-display font-semibold mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <PieChart className="w-6 h-6 text-primary-500" />
               Spending by Category
             </h2>
 
             {categoryData.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                 <p>No expense data yet</p>
               </div>
             ) : (
@@ -264,7 +272,7 @@ function Analytics() {
                   {categoryData.map((item, index) => (
                     <div
                       key={item.category}
-                      className="flex items-center justify-between p-3 bg-dark-800 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-100 dark:bg-dark-800 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -272,13 +280,15 @@ function Analytics() {
                             colors[index % colors.length]
                           }`}
                         />
-                        <span className="font-medium">{item.category}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {item.category}
+                        </span>
                       </div>
                       <div className="text-right">
-                        <p className="font-mono font-bold">
+                        <p className="font-mono font-bold text-gray-900 dark:text-white">
                           ₹{item.amount.toLocaleString()}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           {item.percentage.toFixed(1)}%
                         </p>
                       </div>
@@ -291,7 +301,7 @@ function Analytics() {
 
           {/* Daily Spending - Bar Chart */}
           <div className="card">
-            <h2 className="text-xl font-display font-semibold mb-6 flex items-center gap-2">
+            <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-primary-500" />
               Last 7 Days
             </h2>
@@ -309,20 +319,22 @@ function Analytics() {
                 return (
                   <div key={index}>
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-400">{day.day}</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {day.day}
+                      </span>
                       <div className="flex gap-4">
                         <span className="text-red-500">-₹{day.expenses}</span>
                         <span className="text-green-500">+₹{day.income}</span>
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <div className="w-full bg-dark-800 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-dark-800 rounded-full h-2">
                         <div
                           className="bg-red-600 h-2 rounded-full transition-all"
                           style={{ width: `${expenseWidth}%` }}
                         />
                       </div>
-                      <div className="w-full bg-dark-800 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-dark-800 rounded-full h-2">
                         <div
                           className="bg-green-600 h-2 rounded-full transition-all"
                           style={{ width: `${incomeWidth}%` }}
@@ -338,7 +350,7 @@ function Analytics() {
 
         {/* Monthly Trends */}
         <div className="card">
-          <h2 className="text-xl font-display font-semibold mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-primary-500" />
             6-Month Trend
           </h2>
