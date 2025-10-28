@@ -495,9 +495,12 @@ function Trading() {
                     if (stockFilter === "positive") return stock.positive;
                     if (stockFilter === "negative") return !stock.positive;
                     if (stockFilter === "dividend") return stock.dividend > 0;
-                    if (stockFilter === "largeCap") return stock.marketCap === "Large";
-                    if (stockFilter === "midCap") return stock.marketCap === "Mid";
-                    if (stockFilter === "smallCap") return stock.marketCap === "Small";
+                    if (stockFilter === "largeCap")
+                      return stock.marketCap === "Large";
+                    if (stockFilter === "midCap")
+                      return stock.marketCap === "Mid";
+                    if (stockFilter === "smallCap")
+                      return stock.marketCap === "Small";
                     if (stockFilter === "lowPE") return stock.peRatio < 15;
                     if (stockFilter === "highPrice") return stock.price > 2000;
                     if (stockFilter === "lowPrice") return stock.price < 2000;
@@ -567,7 +570,9 @@ function Trading() {
                     <option value="lowRisk">Low Risk</option>
                     <option value="mediumRisk">Medium Risk</option>
                     <option value="highRisk">High Risk</option>
-                    <option value="highReturns3Y">Best 3Y Returns (&gt; 15%)</option>
+                    <option value="highReturns3Y">
+                      Best 3Y Returns (&gt; 15%)
+                    </option>
                     <option value="lowPrice">Affordable (&lt; ₹5000)</option>
                   </select>
                 </div>
@@ -576,10 +581,14 @@ function Trading() {
                 {mutualFunds
                   .filter((fund) => {
                     if (fundFilter === "positive") return fund.change > 3;
-                    if (fundFilter === "lowRisk") return fund.riskLevel === "Low";
-                    if (fundFilter === "mediumRisk") return fund.riskLevel === "Medium";
-                    if (fundFilter === "highRisk") return fund.riskLevel === "High";
-                    if (fundFilter === "highReturns3Y") return fund.returns3Y > 15;
+                    if (fundFilter === "lowRisk")
+                      return fund.riskLevel === "Low";
+                    if (fundFilter === "mediumRisk")
+                      return fund.riskLevel === "Medium";
+                    if (fundFilter === "highRisk")
+                      return fund.riskLevel === "High";
+                    if (fundFilter === "highReturns3Y")
+                      return fund.returns3Y > 15;
                     if (fundFilter === "lowPrice") return fund.price < 5000;
                     return true;
                   })
