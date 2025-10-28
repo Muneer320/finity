@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { UserPlus, Mail, Lock, User, TrendingUp } from "lucide-react";
+import { UserPlus, Mail, Lock, User } from "lucide-react";
 
 function Signup() {
   const navigate = useNavigate();
@@ -30,8 +30,16 @@ function Signup() {
       {/* Mobile Warning */}
       <div className="lg:hidden fixed inset-0 bg-dark-950 flex items-center justify-center p-8 z-50">
         <div className="text-center">
-          <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary-500" />
-          <h1 className="text-2xl font-display font-bold mb-2">Finity</h1>
+          <img
+            src="/finityLogo.png"
+            alt="Finity"
+            className="w-16 h-16 mx-auto mb-4"
+          />
+          <img
+            src="/finityLogoText.png"
+            alt="Finity"
+            className="h-8 mx-auto mb-4"
+          />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
             experience.
@@ -45,12 +53,10 @@ function Signup() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
-              <TrendingUp className="w-8 h-8 text-white" />
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <img src="/finityLogo.png" alt="Finity" className="w-16 h-16" />
+              <img src="/finityLogoText.png" alt="Finity" className="h-10" />
             </div>
-            <h1 className="text-4xl font-display font-bold text-white mb-2">
-              Finity
-            </h1>
             <p className="text-gray-400">Start your financial journey</p>
           </div>
 

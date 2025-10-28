@@ -62,8 +62,16 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
       {/* Mobile Warning */}
       <div className="lg:hidden fixed inset-0 bg-dark-950 flex items-center justify-center p-8 z-50">
         <div className="text-center">
-          <img src="/finityLogo.png" alt="Finity" className="w-16 h-16 mx-auto mb-4" />
-          <img src="/finityLogoText.png" alt="Finity" className="h-8 mx-auto mb-4" />
+          <img
+            src="/finityLogo.png"
+            alt="Finity"
+            className="w-16 h-16 mx-auto mb-4"
+          />
+          <img
+            src="/finityLogoText.png"
+            alt="Finity"
+            className="h-8 mx-auto mb-4"
+          />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
             experience.
