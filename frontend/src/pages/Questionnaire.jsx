@@ -58,7 +58,23 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950">
+      {/* Mobile Warning */}
+      <div className="lg:hidden fixed inset-0 bg-dark-950 flex items-center justify-center p-8 z-50">
+        <div className="text-center">
+          <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary-500" />
+          <h1 className="text-2xl font-display font-bold mb-2">Finity</h1>
+          <p className="text-gray-400 mb-4">
+            Please view this application from a larger screen for the best experience.
+          </p>
+          <p className="text-sm text-gray-500">
+            Minimum screen width: 1024px
+          </p>
+        </div>
+      </div>
+
+      {/* Desktop Questionnaire */}
+      <div className="hidden lg:block p-4">
       <div className="max-w-3xl mx-auto py-12">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -422,6 +438,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

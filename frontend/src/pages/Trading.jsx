@@ -6,14 +6,36 @@ import {
   ShoppingCart,
   Clock,
   Trophy,
+  CheckCircle2,
 } from "lucide-react";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function Trading() {
   const [balance] = useState(100000); // Starting F-Coins
   const [selectedStock, setSelectedStock] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [portfolio, setPortfolio] = useState([]);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [lastPurchase, setLastPurchase] = useState(null);
+
+  // Generate mock trend data for stocks
+  const generateTrendData = (basePrice, positive) => {
+    const points = [];
+    let price = basePrice * 0.95; // Start from 95% of current price
+    
+    for (let i = 0; i < 30; i++) {
+      const change = (Math.random() - 0.5) * basePrice * 0.02;
+      price += change;
+      if (positive && i > 15) {
+        price += Math.random() * basePrice * 0.01; // Trend upward
+      } else if (!positive && i > 15) {
+        price -= Math.random() * basePrice * 0.01; // Trend downward
+      }
+      points.push(price);
+    }
+    return points;
+  };
 
   // Mock stocks data
   const stocks = [
@@ -25,6 +47,7 @@ function Trading() {
       change: 5.2,
       positive: true,
       category: "Technology",
+      trend: null,
     },
     {
       id: 2,
@@ -34,6 +57,7 @@ function Trading() {
       change: -2.1,
       positive: false,
       category: "Finance",
+      trend: null,
     },
     {
       id: 3,
@@ -43,6 +67,7 @@ function Trading() {
       change: 3.8,
       positive: true,
       category: "Healthcare",
+      trend: null,
     },
     {
       id: 4,
@@ -52,6 +77,7 @@ function Trading() {
       change: -1.5,
       positive: false,
       category: "Energy",
+      trend: null,
     },
     {
       id: 5,
@@ -61,6 +87,7 @@ function Trading() {
       change: 2.3,
       positive: true,
       category: "Consumer",
+      trend: null,
     },
   ];
 
@@ -73,6 +100,7 @@ function Trading() {
       change: 1.8,
       positive: true,
       category: "Mutual Fund",
+      trend: null,
     },
     {
       id: 7,
@@ -82,8 +110,18 @@ function Trading() {
       change: 4.2,
       positive: true,
       category: "Mutual Fund",
+      trend: null,
     },
   ];
+
+  // Generate trends for each asset
+  stocks.forEach(stock => {
+    stock.trend = generateTrendData(stock.price, stock.positive);
+  });
+  
+  mutualFunds.forEach(fund => {
+    fund.trend = generateTrendData(fund.price, fund.positive);
+  });
 
   const allAssets = [...stocks, ...mutualFunds];
 
@@ -125,7 +163,19 @@ function Trading() {
 
     setSelectedStock(null);
     setQuantity(1);
-    alert(`Successfully bought ${quantity} shares of ${selectedStock.symbol}!`);
+    
+    // Show success animation
+    setLastPurchase({
+      symbol: selectedStock.symbol,
+      quantity,
+      amount: totalCost,
+    });
+    setShowSuccessAnimation(true);
+    
+    // Hide animation after 3 seconds
+    setTimeout(() => {
+      setShowSuccessAnimation(false);
+    }, 3000);
   };
 
   const portfolioValue = portfolio.reduce(
@@ -140,8 +190,116 @@ function Trading() {
 
   const profitLoss = portfolioValue - totalInvested;
 
+  // Render mini trend chart
+  const renderTrendChart = (trendData, positive) => {
+    if (!trendData) return null;
+    
+    const max = Math.max(...trendData);
+    const min = Math.min(...trendData);
+    const range = max - min;
+    
+    const points = trendData.map((price, i) => {
+      const x = (i / (trendData.length - 1)) * 200;
+      const y = 60 - ((price - min) / range) * 50;
+      return `${x},${y}`;
+    }).join(' ');
+    
+    return (
+      <svg width="200" height="60" className="mt-2">
+        <polyline
+          points={points}
+          fill="none"
+          stroke={positive ? "#22c55e" : "#ef4444"}
+          strokeWidth="2"
+        />
+      </svg>
+    );
+  };
+
   return (
     <Layout>
+      {/* Success Animation */}
+      <AnimatePresence>
+        {showSuccessAnimation && lastPurchase && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50"
+          >
+            <motion.div
+              initial={{ y: 50 }}
+              animate={{ y: 0 }}
+              className="bg-white dark:bg-dark-900 rounded-2xl p-8 max-w-md mx-4 border border-gray-200 dark:border-dark-800 shadow-2xl"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="w-20 h-20 mx-auto mb-4 bg-green-500 rounded-full flex items-center justify-center"
+              >
+                <CheckCircle2 className="w-12 h-12 text-white" />
+              </motion.div>
+              
+              <motion.h3
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl font-display font-bold text-center mb-2 text-gray-900 dark:text-white"
+              >
+                Order Successful!
+              </motion.h3>
+              
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-center space-y-2"
+              >
+                <p className="text-gray-600 dark:text-gray-400">
+                  Successfully purchased
+                </p>
+                <p className="text-xl font-mono font-bold text-primary-600">
+                  {lastPurchase.quantity} × {lastPurchase.symbol}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Total: ₹{lastPurchase.amount.toLocaleString()}
+                </p>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="mt-6 flex gap-2"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                  className="text-4xl mx-auto"
+                >
+                  🎉
+                </motion.div>
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                  className="text-4xl mx-auto"
+                >
+                  📈
+                </motion.div>
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ delay: 1.2, duration: 0.5 }}
+                  className="text-4xl mx-auto"
+                >
+                  💰
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
@@ -315,6 +473,26 @@ function Trading() {
                     <p className="font-mono font-bold text-primary-500 mt-2">
                       ₹{selectedStock.price}
                     </p>
+                    
+                    {/* Trend Chart */}
+                    <div className="mt-4 border-t border-dark-700 pt-4">
+                      <p className="text-xs text-gray-400 mb-2">30-Day Trend</p>
+                      {renderTrendChart(selectedStock.trend, selectedStock.positive)}
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-500">30d ago</span>
+                        <span className={`text-xs flex items-center gap-1 ${
+                          selectedStock.positive ? "text-green-500" : "text-red-500"
+                        }`}>
+                          {selectedStock.positive ? (
+                            <TrendingUp className="w-3 h-3" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3" />
+                          )}
+                          {selectedStock.change}%
+                        </span>
+                        <span className="text-xs text-gray-500">Today</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
