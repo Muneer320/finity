@@ -45,11 +45,10 @@ function Layout({ children }) {
           <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary-500" />
           <h1 className="text-2xl font-display font-bold mb-2">Finity</h1>
           <p className="text-gray-400 mb-4">
-            Please view this application from a larger screen for the best experience.
+            Please view this application from a larger screen for the best
+            experience.
           </p>
-          <p className="text-sm text-gray-500">
-            Minimum screen width: 1024px
-          </p>
+          <p className="text-sm text-gray-500">Minimum screen width: 1024px</p>
         </div>
       </div>
 
@@ -123,7 +122,9 @@ function Layout({ children }) {
           <button
             onClick={toggleTheme}
             className="p-3 rounded-lg bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all shadow-lg"
-            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            title={
+              theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+            }
           >
             {theme === "dark" ? (
               <Sun className="w-5 h-5" />
@@ -132,7 +133,7 @@ function Layout({ children }) {
             )}
           </button>
         </div>
-        
+
         {children}
       </div>
 
@@ -146,7 +147,9 @@ function Layout({ children }) {
             className="bg-white dark:bg-dark-900 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-dark-800"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">Your Badges</h3>
+            <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">
+              Your Badges
+            </h3>
 
             {badges.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400 text-center py-8">
@@ -157,7 +160,9 @@ function Layout({ children }) {
                 {badges.map((badge, index) => (
                   <div key={index} className="card text-center p-4">
                     <div className="text-4xl mb-2">{badge.icon}</div>
-                    <div className="font-medium text-sm text-gray-900 dark:text-white">{badge.name}</div>
+                    <div className="font-medium text-sm text-gray-900 dark:text-white">
+                      {badge.name}
+                    </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {badge.description}
                     </div>

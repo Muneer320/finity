@@ -23,7 +23,7 @@ function Trading() {
   const generateTrendData = (basePrice, positive) => {
     const points = [];
     let price = basePrice * 0.95; // Start from 95% of current price
-    
+
     for (let i = 0; i < 30; i++) {
       const change = (Math.random() - 0.5) * basePrice * 0.02;
       price += change;
@@ -115,11 +115,11 @@ function Trading() {
   ];
 
   // Generate trends for each asset
-  stocks.forEach(stock => {
+  stocks.forEach((stock) => {
     stock.trend = generateTrendData(stock.price, stock.positive);
   });
-  
-  mutualFunds.forEach(fund => {
+
+  mutualFunds.forEach((fund) => {
     fund.trend = generateTrendData(fund.price, fund.positive);
   });
 
@@ -163,7 +163,7 @@ function Trading() {
 
     setSelectedStock(null);
     setQuantity(1);
-    
+
     // Show success animation
     setLastPurchase({
       symbol: selectedStock.symbol,
@@ -171,7 +171,7 @@ function Trading() {
       amount: totalCost,
     });
     setShowSuccessAnimation(true);
-    
+
     // Hide animation after 3 seconds
     setTimeout(() => {
       setShowSuccessAnimation(false);
@@ -193,17 +193,19 @@ function Trading() {
   // Render mini trend chart
   const renderTrendChart = (trendData, positive) => {
     if (!trendData) return null;
-    
+
     const max = Math.max(...trendData);
     const min = Math.min(...trendData);
     const range = max - min;
-    
-    const points = trendData.map((price, i) => {
-      const x = (i / (trendData.length - 1)) * 200;
-      const y = 60 - ((price - min) / range) * 50;
-      return `${x},${y}`;
-    }).join(' ');
-    
+
+    const points = trendData
+      .map((price, i) => {
+        const x = (i / (trendData.length - 1)) * 200;
+        const y = 60 - ((price - min) / range) * 50;
+        return `${x},${y}`;
+      })
+      .join(" ");
+
     return (
       <svg width="200" height="60" className="mt-2">
         <polyline
@@ -240,7 +242,7 @@ function Trading() {
               >
                 <CheckCircle2 className="w-12 h-12 text-white" />
               </motion.div>
-              
+
               <motion.h3
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -249,7 +251,7 @@ function Trading() {
               >
                 Order Successful!
               </motion.h3>
-              
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -266,7 +268,7 @@ function Trading() {
                   Total: ₹{lastPurchase.amount.toLocaleString()}
                 </p>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -473,16 +475,23 @@ function Trading() {
                     <p className="font-mono font-bold text-primary-500 mt-2">
                       ₹{selectedStock.price}
                     </p>
-                    
+
                     {/* Trend Chart */}
                     <div className="mt-4 border-t border-dark-700 pt-4">
                       <p className="text-xs text-gray-400 mb-2">30-Day Trend</p>
-                      {renderTrendChart(selectedStock.trend, selectedStock.positive)}
+                      {renderTrendChart(
+                        selectedStock.trend,
+                        selectedStock.positive
+                      )}
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-xs text-gray-500">30d ago</span>
-                        <span className={`text-xs flex items-center gap-1 ${
-                          selectedStock.positive ? "text-green-500" : "text-red-500"
-                        }`}>
+                        <span
+                          className={`text-xs flex items-center gap-1 ${
+                            selectedStock.positive
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                        >
                           {selectedStock.positive ? (
                             <TrendingUp className="w-3 h-3" />
                           ) : (
