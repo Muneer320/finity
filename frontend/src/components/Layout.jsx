@@ -112,7 +112,7 @@ function Layout({ children }) {
           <img
             src="/finityLogo.png"
             alt="Finity"
-            className="w-16 h-16 mx-auto mb-4"
+            className="w-32 h-32 mx-auto mb-4"
           />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
@@ -128,8 +128,11 @@ function Layout({ children }) {
           {/* Logo */}
           <div className="p-6 border-b border-gray-200 dark:border-dark-800">
             <div className="flex items-center gap-2">
-              <img src="/finityLogo.png" alt="Finity" className="w-8 h-8" />
-              <img src="/finityLogoText.png" alt="Finity" className="h-6" />
+              <img
+                src="/finityLogoText.png"
+                alt="Finity"
+                className="h-15 w-auto"
+              />
             </div>
           </div>
 

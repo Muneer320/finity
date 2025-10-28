@@ -33,7 +33,7 @@ function Signup() {
           <img
             src="/finityLogo.png"
             alt="Finity"
-            className="w-16 h-16 mx-auto mb-4"
+            className="w-32 h-32 mx-auto mb-4"
           />
           <p className="text-gray-400 mb-4">
             Please view this application from a larger screen for the best
@@ -51,7 +51,7 @@ function Signup() {
             <img
               src="/finityLogoText.png"
               alt="Finity"
-              className="h-12 mx-auto mb-4"
+              className="h-20 w-auto mx-auto mb-4"
             />
             <p className="text-gray-400">Start your financial journey</p>
           </div>
