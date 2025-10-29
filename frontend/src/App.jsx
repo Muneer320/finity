@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import Expenses from "./pages/Expenses";
 import Analytics from "./pages/Analytics";
 import MicroCourse from "./pages/MicroCourse";
+import Homepage from "./pages/Homepage"
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,7 +36,7 @@ function App() {
 
   const PrivateRoute = ({ children }) => {
     if (!isAuthenticated) {
-      return <Navigate to="/login" />;
+      return <Navigate to="/" />;
     }
 
     if (!hasCompletedQuestionnaire) {
@@ -49,6 +50,7 @@ function App() {
     <AchievementProvider>
       <Router>
         <Routes>
+          <Route path="/" element={<Homepage />} />
           <Route
             path="/login"
             element={<Login setIsAuthenticated={setIsAuthenticated} />}
