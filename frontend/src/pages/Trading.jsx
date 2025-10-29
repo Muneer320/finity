@@ -9,8 +9,9 @@ import {
   CheckCircle2,
   Filter,
   TrendingDown as SellIcon,
+  RefreshCw,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAchievement } from "../context/AchievementContext";
 import {
@@ -20,6 +21,7 @@ import {
   checkDiamondHands,
   checkTradingPro,
 } from "../utils/achievementManager";
+import { marketAPI } from "../utils/api";
 
 function Trading() {
   const { showAchievement } = useAchievement();
@@ -27,12 +29,37 @@ function Trading() {
   const [selectedStock, setSelectedStock] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [portfolio, setPortfolio] = useState([]);
+  const [livePortfolio, setLivePortfolio] = useState(null);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [lastPurchase, setLastPurchase] = useState(null);
   const [stockFilter, setStockFilter] = useState("all"); // all, positive, negative, dividend, largeCap, midCap, smallCap
   const [fundFilter, setFundFilter] = useState("all");
   const [tradeMode, setTradeMode] = useState("buy"); // buy or sell
   const [selectedHolding, setSelectedHolding] = useState(null);
+
+  // Fetch live portfolio from backend
+  const fetchLivePortfolio = async () => {
+    setPortfolioLoading(true);
+    try {
+      const response = await marketAPI.getLiveFeed();
+      setLivePortfolio(response);
+      console.log("Live portfolio data:", response);
+    } catch (err) {
+      console.error("Failed to fetch live portfolio:", err);
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch portfolio on mount
+    fetchLivePortfolio();
+
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchLivePortfolio, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Generate mock trend data for stocks
   const generateTrendData = (basePrice, positive) => {
@@ -895,11 +922,108 @@ function Trading() {
 
             {/* Portfolio */}
             <div className="card">
-              <h2 className="text-xl font-display font-semibold mb-4 text-gray-900 dark:text-white">
-                Your Holdings
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white">
+                  Your Holdings
+                </h2>
+                <button
+                  onClick={fetchLivePortfolio}
+                  disabled={portfolioLoading}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
+                  title="Refresh portfolio"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 text-gray-600 dark:text-gray-400 ${
+                      portfolioLoading ? "animate-spin" : ""
+                    }`}
+                  />
+                </button>
+              </div>
 
-              {portfolio.length === 0 ? (
+              {/* Live Portfolio Value */}
+              {livePortfolio && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg border border-green-500/20">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                        Total Portfolio Value
+                      </p>
+                      <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+                        ₹{livePortfolio.total_portfolio_value?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Last Update
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                        {new Date(livePortfolio.last_update).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {portfolioLoading && !livePortfolio ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-primary-500" />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Loading portfolio...
+                  </p>
+                </div>
+              ) : livePortfolio?.holdings?.length > 0 ? (
+                <div className="space-y-3">
+                  {livePortfolio.holdings.map((holding, index) => (
+                    <div
+                      key={index}
+                      className="p-3 bg-gray-100 dark:bg-dark-800 rounded-lg"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-mono font-bold text-gray-900 dark:text-white">
+                            {holding.symbol}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {holding.shares} shares @ ₹{holding.average_cost}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-sm text-gray-900 dark:text-white">
+                            ₹{holding.current_value?.toLocaleString()}
+                          </p>
+                          <p
+                            className={`text-xs font-medium ${
+                              holding.gain_loss_percent >= 0
+                                ? "text-green-500"
+                                : "text-red-500"
+                            }`}
+                          >
+                            {holding.gain_loss_percent >= 0 ? "+" : ""}
+                            {holding.gain_loss_percent?.toFixed(2)}%
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Current: ₹{holding.current_price}
+                        </span>
+                        <span
+                          className={`font-medium ${
+                            holding.gain_loss_percent >= 0
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {holding.gain_loss_percent >= 0 ? "↑" : "↓"} ₹
+                          {Math.abs(
+                            holding.current_value - holding.shares * holding.average_cost
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : portfolio.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <p className="text-sm">No holdings yet</p>
                   <p className="text-xs mt-1">

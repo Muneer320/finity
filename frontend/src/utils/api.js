@@ -137,6 +137,16 @@ export const gamificationAPI = {
   },
 };
 
+// Market/Trading API calls
+export const marketAPI = {
+  // Get user's portfolio holdings with real-time mocked values (Paper Trading)
+  getLiveFeed: async () => {
+    return apiRequest("/market/live-feed", {
+      method: "GET",
+    });
+  },
+};
+
 // Storage helpers
 export const storage = {
   setAuth: (data) => {
