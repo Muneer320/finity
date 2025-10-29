@@ -96,10 +96,11 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
     try {
       // Convert investments selection to numeric value
-      const investmentAmount = formData.investments === "none" 
-        ? 0 
-        : parseFloat(formData.investmentAmount) || 0;
-      
+      const investmentAmount =
+        formData.investments === "none"
+          ? 0
+          : parseFloat(formData.investmentAmount) || 0;
+
       // Prepare data for backend API
       const onboardingData = {
         age: parseInt(formData.age),
@@ -115,7 +116,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
         financial_confidence: formData.financialConfidence,
         fixed_budget:
           parseFloat(formData.income) - parseFloat(formData.monthlyExpenses), // Calculate fixed budget
-        goals_data: formData.financialGoals.map((goal) => ({ goal })), // Array of objects with 'goal' key
+        goals_data: formData.financialGoals.map((goal) => ({ name: goal })), // Array of objects with 'name' key
       };
 
       console.log("Submitting onboarding data:", onboardingData);
@@ -413,7 +414,8 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                 {formData.investments && formData.investments !== "none" && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Total Investment Amount <span className="text-red-500">*</span>
+                      Total Investment Amount{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -421,9 +423,12 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                       min="0"
                       className="input-field"
                       placeholder="50000"
-                      value={formData.investmentAmount || ''}
+                      value={formData.investmentAmount || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, investmentAmount: e.target.value })
+                        setFormData({
+                          ...formData,
+                          investmentAmount: e.target.value,
+                        })
                       }
                     />
                   </div>
