@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import os
 from typing import Dict
 import random
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Database, Security, and Schema Imports
 from database.database import create_db_and_tables, get_db
@@ -15,9 +17,23 @@ from auth.auth_service import create_access_token, verify_password, get_current_
 from auth.auth_service import ACCESS_TOKEN_EXPIRE_MINUTES
 from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, generate_financial_summary, get_chat_response, execute_investment_simulation, get_mock_asset_history, generate_next_lesson
 
+origins = [
+    "http://localhost:3000",       # Local Frontend Development URL
+    "http://127.0.0.1:3000",       # Alternative local URL
+    "https://finityy.vercel.app", # <--- IMPORTANT: Replace with the actual frontend URL
+    "https://finity.onrender.com", # Optionally allow access from the backend's own domain
+]
 # --- APP INITIALIZATION ---
 load_dotenv()
 app = FastAPI(title="Finity: The Frugal Friend Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,             # Use the defined whitelist
+    allow_credentials=True,            # Allows cookies, authorization headers, etc. (Needed for JWT)
+    allow_methods=["*"],               # Allows all methods (GET, POST, PUT, DELETE)
+    allow_headers=["*"],               # Allows all headers (Needed for Authorization: Bearer <token>)
+)
 
 # NOTE: Tables must be created. Assuming this was done successfully with the Supabase connection.
 # create_db_and_tables() 
