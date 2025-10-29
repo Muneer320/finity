@@ -198,7 +198,7 @@ function Trading() {
 
   const allAssets = [...stocks, ...mutualFunds];
 
-  const handleBuy = () => {
+  const handleBuy = async () => {
     if (!selectedStock || quantity < 1) return;
 
     const totalCost = selectedStock.price * quantity;
@@ -207,72 +207,92 @@ function Trading() {
       return;
     }
 
-    const existingHolding = portfolio.find((p) => p.id === selectedStock.id);
-    if (existingHolding) {
-      const updatedPortfolio = portfolio.map((p) =>
-        p.id === selectedStock.id
-          ? { ...p, quantity: p.quantity + quantity }
-          : p
-      );
-      setPortfolio(updatedPortfolio);
-    } else {
-      setPortfolio([
+    try {
+      // Execute buy action via backend API
+      const actionData = {
+        asset_type: selectedStock.type || "stock", // "stock" or "fund"
+        symbol: selectedStock.symbol,
+        action: "buy",
+        amount: quantity,
+      };
+
+      const response = await marketAPI.executeAction(actionData);
+      console.log("Buy action response:", response);
+
+      // Update local portfolio (will be replaced by backend data on next refresh)
+      const existingHolding = portfolio.find((p) => p.id === selectedStock.id);
+      if (existingHolding) {
+        const updatedPortfolio = portfolio.map((p) =>
+          p.id === selectedStock.id
+            ? { ...p, quantity: p.quantity + quantity }
+            : p
+        );
+        setPortfolio(updatedPortfolio);
+      } else {
+        setPortfolio([
+          ...portfolio,
+          { ...selectedStock, quantity, boughtAt: selectedStock.price },
+        ]);
+      }
+
+      setBalance(balance - totalCost);
+
+      // Refresh live portfolio data
+      await fetchLivePortfolio();
+
+      // Increment trade count and check for achievements
+      incrementTradeCount();
+
+      // Award First Trade achievement
+      const firstTradeAchievement = {
+        icon: "📈",
+        name: ACHIEVEMENT_TYPES.FIRST_TRADE,
+        description: "Executed your first mock trade!",
+      };
+      const awardedFirstTrade = awardAchievement(firstTradeAchievement);
+      if (awardedFirstTrade) {
+        showAchievement(firstTradeAchievement);
+      }
+
+      // Check Trading Pro achievement (50+ trades)
+      const tradingProAchievement = checkTradingPro();
+      if (tradingProAchievement) {
+        showAchievement(tradingProAchievement);
+      }
+
+      // Calculate new portfolio value and check Diamond Hands
+      const newPortfolioValue = [
         ...portfolio,
         { ...selectedStock, quantity, boughtAt: selectedStock.price },
-      ]);
+      ].reduce((sum, holding) => sum + holding.price * holding.quantity, 0);
+      const diamondHandsAchievement = checkDiamondHands(newPortfolioValue);
+      if (diamondHandsAchievement) {
+        showAchievement(diamondHandsAchievement);
+      }
+
+      setSelectedStock(null);
+      setQuantity(1);
+
+      // Show success animation
+      setLastPurchase({
+        symbol: selectedStock.symbol,
+        quantity,
+        amount: totalCost,
+        type: "buy",
+      });
+      setShowSuccessAnimation(true);
+
+      // Hide animation after 3 seconds
+      setTimeout(() => {
+        setShowSuccessAnimation(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Buy action failed:", error);
+      alert(error.message || "Failed to execute buy order. Please try again.");
     }
-
-    setBalance(balance - totalCost);
-
-    // Increment trade count and check for achievements
-    incrementTradeCount();
-
-    // Award First Trade achievement
-    const firstTradeAchievement = {
-      icon: "📈",
-      name: ACHIEVEMENT_TYPES.FIRST_TRADE,
-      description: "Executed your first mock trade!",
-    };
-    const awardedFirstTrade = awardAchievement(firstTradeAchievement);
-    if (awardedFirstTrade) {
-      showAchievement(firstTradeAchievement);
-    }
-
-    // Check Trading Pro achievement (50+ trades)
-    const tradingProAchievement = checkTradingPro();
-    if (tradingProAchievement) {
-      showAchievement(tradingProAchievement);
-    }
-
-    // Calculate new portfolio value and check Diamond Hands
-    const newPortfolioValue = [
-      ...portfolio,
-      { ...selectedStock, quantity, boughtAt: selectedStock.price },
-    ].reduce((sum, holding) => sum + holding.price * holding.quantity, 0);
-    const diamondHandsAchievement = checkDiamondHands(newPortfolioValue);
-    if (diamondHandsAchievement) {
-      showAchievement(diamondHandsAchievement);
-    }
-
-    setSelectedStock(null);
-    setQuantity(1);
-
-    // Show success animation
-    setLastPurchase({
-      symbol: selectedStock.symbol,
-      quantity,
-      amount: totalCost,
-      type: "buy",
-    });
-    setShowSuccessAnimation(true);
-
-    // Hide animation after 3 seconds
-    setTimeout(() => {
-      setShowSuccessAnimation(false);
-    }, 3000);
   };
 
-  const handleSell = () => {
+  const handleSell = async () => {
     if (!selectedHolding || quantity < 1) return;
 
     const holding = portfolio.find((p) => p.id === selectedHolding.id);
@@ -281,54 +301,73 @@ function Trading() {
       return;
     }
 
-    const saleValue = selectedHolding.price * quantity;
+    try {
+      const saleValue = selectedHolding.price * quantity;
 
-    // Update portfolio
-    const updatedPortfolio = portfolio
-      .map((p) =>
-        p.id === selectedHolding.id
-          ? { ...p, quantity: p.quantity - quantity }
-          : p
-      )
-      .filter((p) => p.quantity > 0);
+      // Execute sell action via backend API
+      const actionData = {
+        asset_type: selectedHolding.type || "stock", // "stock" or "fund"
+        symbol: selectedHolding.symbol,
+        action: "sell",
+        amount: quantity,
+      };
 
-    setPortfolio(updatedPortfolio);
-    setBalance(balance + saleValue);
+      const response = await marketAPI.executeAction(actionData);
+      console.log("Sell action response:", response);
 
-    // Increment trade count and check for achievements
-    incrementTradeCount();
+      // Update local portfolio
+      const updatedPortfolio = portfolio
+        .map((p) =>
+          p.id === selectedHolding.id
+            ? { ...p, quantity: p.quantity - quantity }
+            : p
+        )
+        .filter((p) => p.quantity > 0);
 
-    // Check Trading Pro achievement (50+ trades)
-    const tradingProAchievement = checkTradingPro();
-    if (tradingProAchievement) {
-      showAchievement(tradingProAchievement);
+      setPortfolio(updatedPortfolio);
+      setBalance(balance + saleValue);
+
+      // Refresh live portfolio data
+      await fetchLivePortfolio();
+
+      // Increment trade count and check for achievements
+      incrementTradeCount();
+
+      // Check Trading Pro achievement (50+ trades)
+      const tradingProAchievement = checkTradingPro();
+      if (tradingProAchievement) {
+        showAchievement(tradingProAchievement);
+      }
+
+      // Calculate new portfolio value and check Diamond Hands
+      const newPortfolioValue = updatedPortfolio.reduce(
+        (sum, holding) => sum + holding.price * holding.quantity,
+        0
+      );
+      const diamondHandsAchievement = checkDiamondHands(newPortfolioValue);
+      if (diamondHandsAchievement) {
+        showAchievement(diamondHandsAchievement);
+      }
+
+      setSelectedHolding(null);
+      setQuantity(1);
+
+      // Show success animation
+      setLastPurchase({
+        symbol: selectedHolding.symbol,
+        quantity,
+        amount: saleValue,
+        type: "sell",
+      });
+      setShowSuccessAnimation(true);
+
+      setTimeout(() => {
+        setShowSuccessAnimation(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Sell action failed:", error);
+      alert(error.message || "Failed to execute sell order. Please try again.");
     }
-
-    // Calculate new portfolio value and check Diamond Hands
-    const newPortfolioValue = updatedPortfolio.reduce(
-      (sum, holding) => sum + holding.price * holding.quantity,
-      0
-    );
-    const diamondHandsAchievement = checkDiamondHands(newPortfolioValue);
-    if (diamondHandsAchievement) {
-      showAchievement(diamondHandsAchievement);
-    }
-
-    setSelectedHolding(null);
-    setQuantity(1);
-
-    // Show success animation
-    setLastPurchase({
-      symbol: selectedHolding.symbol,
-      quantity,
-      amount: saleValue,
-      type: "sell",
-    });
-    setShowSuccessAnimation(true);
-
-    setTimeout(() => {
-      setShowSuccessAnimation(false);
-    }, 3000);
   };
 
   const portfolioValue = portfolio.reduce(
@@ -957,7 +996,9 @@ function Trading() {
                         Last Update
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-500">
-                        {new Date(livePortfolio.last_update).toLocaleTimeString()}
+                        {new Date(
+                          livePortfolio.last_update
+                        ).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
@@ -1016,7 +1057,8 @@ function Trading() {
                         >
                           {holding.gain_loss_percent >= 0 ? "↑" : "↓"} ₹
                           {Math.abs(
-                            holding.current_value - holding.shares * holding.average_cost
+                            holding.current_value -
+                              holding.shares * holding.average_cost
                           ).toFixed(2)}
                         </span>
                       </div>

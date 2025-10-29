@@ -145,6 +145,14 @@ export const marketAPI = {
       method: "GET",
     });
   },
+
+  // Execute investment action (buy/sell)
+  executeAction: async (actionData) => {
+    return apiRequest("/simulate/invest/action", {
+      method: "POST",
+      body: JSON.stringify(actionData),
+    });
+  },
 };
 
 // Storage helpers
