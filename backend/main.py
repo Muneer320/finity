@@ -39,6 +39,16 @@ app.add_middleware(
 # NOTE: Tables must be created. Assuming this was done successfully with the Supabase connection.
 # create_db_and_tables() 
 
+# --- TEST/DEBUG ROUTES ---
+@app.get("/", tags=["Debug"])
+def root():
+    """Health check and CORS verification endpoint."""
+    return {
+        "status": "running",
+        "cors_origins": origins,
+        "message": "Finity Backend API - CORS Fixed v2"
+    }
+
 # --- 1. AUTHENTICATION ROUTES (Amogh & Muneer's Focus) ---
 
 @app.post("/signup", response_model=schemas.Token, tags=["Auth"])
