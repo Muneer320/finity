@@ -63,21 +63,21 @@ function Expenses() {
 
     try {
       let response;
-      
+
       if (formData.type === "expense") {
         // Create expense via API
         response = await expenseAPI.create({
           amount: parseFloat(formData.amount),
           category: formData.category,
           note: formData.description,
-          date: formData.date || null,
+          date: null, // Backend expects null, will auto-generate timestamp
         });
       } else {
         // Create income via API
         response = await incomeAPI.create({
           amount: parseFloat(formData.amount),
           source: formData.category,
-          date: formData.date || null,
+          date: null, // Backend expects null, will auto-generate timestamp
         });
       }
 
@@ -86,8 +86,12 @@ function Expenses() {
         id: response.id,
         type: formData.type,
         amount: response.amount,
-        category: formData.type === "expense" ? response.category : response.source,
-        description: formData.type === "expense" ? response.note : `Income from ${response.source}`,
+        category:
+          formData.type === "expense" ? response.category : response.source,
+        description:
+          formData.type === "expense"
+            ? response.note
+            : `Income from ${response.source}`,
         date: formData.date,
         timestamp: response.date,
         owner_id: response.owner_id,
@@ -467,10 +471,12 @@ function Expenses() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={loading}
-                    className={`btn-primary flex-1 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`btn-primary flex-1 ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -478,14 +484,16 @@ function Expenses() {
                         Saving...
                       </span>
                     ) : (
-                      'Add Transaction'
+                      "Add Transaction"
                     )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
                     disabled={loading}
-                    className={`btn-secondary flex-1 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`btn-secondary flex-1 ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
                     Cancel
                   </button>
