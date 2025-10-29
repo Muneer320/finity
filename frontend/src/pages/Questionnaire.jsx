@@ -18,7 +18,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
     investmentAmount: "", // Add investment amount field
     loans: "",
     loanAmount: "",
-    financialGoals: [],
+    financialGoals: [], // Array of objects: [{ name: "Build Emergency Fund", target: 50000 }]
     riskTolerance: "",
     experience: "",
     financialConfidence: 5, // Default value 1-10
@@ -116,7 +116,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
         financial_confidence: formData.financialConfidence,
         fixed_budget:
           parseFloat(formData.income) - parseFloat(formData.monthlyExpenses), // Calculate fixed budget
-        goals_data: formData.financialGoals.map((goal) => ({ name: goal })), // Array of objects with 'name' key
+        goals_data: formData.financialGoals, // Already in correct format: [{ name: string, target: number }]
       };
 
       console.log("Submitting onboarding data:", onboardingData);
@@ -137,18 +137,31 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
     }
   };
 
-  const toggleGoal = (goal) => {
-    if (formData.financialGoals.includes(goal)) {
+  const toggleGoal = (goalName) => {
+    const existingGoal = formData.financialGoals.find(g => g.name === goalName);
+    
+    if (existingGoal) {
+      // Remove goal if it exists
       setFormData({
         ...formData,
-        financialGoals: formData.financialGoals.filter((g) => g !== goal),
+        financialGoals: formData.financialGoals.filter((g) => g.name !== goalName),
       });
     } else {
+      // Add goal with default target of 0
       setFormData({
         ...formData,
-        financialGoals: [...formData.financialGoals, goal],
+        financialGoals: [...formData.financialGoals, { name: goalName, target: 0 }],
       });
     }
+  };
+
+  const updateGoalTarget = (goalName, targetValue) => {
+    setFormData({
+      ...formData,
+      financialGoals: formData.financialGoals.map(g => 
+        g.name === goalName ? { ...g, target: parseFloat(targetValue) || 0 } : g
+      ),
+    });
   };
 
   return (
@@ -549,25 +562,42 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                       "Grow Wealth",
                       "Financial Independence",
                       "Education Fund",
-                    ].map((goal) => (
-                      <button
-                        key={goal}
-                        type="button"
-                        className={`p-4 rounded-lg border-2 text-left transition-all ${
-                          formData.financialGoals.includes(goal)
-                            ? "border-primary-600 bg-primary-600/10"
-                            : "border-dark-700 hover:border-dark-600"
-                        }`}
-                        onClick={() => toggleGoal(goal)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>{goal}</span>
-                          {formData.financialGoals.includes(goal) && (
-                            <CheckCircle className="w-5 h-5 text-primary-500" />
+                    ].map((goalName) => {
+                      const isSelected = formData.financialGoals.some(g => g.name === goalName);
+                      const goalData = formData.financialGoals.find(g => g.name === goalName);
+                      
+                      return (
+                        <div key={goalName} className="space-y-2">
+                          <button
+                            type="button"
+                            className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                              isSelected
+                                ? "border-primary-600 bg-primary-600/10"
+                                : "border-dark-700 hover:border-dark-600"
+                            }`}
+                            onClick={() => toggleGoal(goalName)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{goalName}</span>
+                              {isSelected && (
+                                <CheckCircle className="w-5 h-5 text-primary-500" />
+                              )}
+                            </div>
+                          </button>
+                          
+                          {isSelected && (
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Target amount (₹)"
+                              className="input-field text-sm"
+                              value={goalData?.target || ''}
+                              onChange={(e) => updateGoalTarget(goalName, e.target.value)}
+                            />
                           )}
                         </div>
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
