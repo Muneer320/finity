@@ -13,7 +13,7 @@ import { marketAPI } from "../utils/api";
 function Analytics() {
   const [transactions, setTransactions] = useState([]);
   const [timeRange, setTimeRange] = useState("month"); // week, month, year
-  
+
   // Investment Simulator State
   const [simStart, setSimStart] = useState(10000);
   const [simMonthly, setSimMonthly] = useState(5000);
@@ -256,7 +256,8 @@ function Analytics() {
             </h2>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Simulate long-term investment growth and get AI-generated learning insights
+            Simulate long-term investment growth and get AI-generated learning
+            insights
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">

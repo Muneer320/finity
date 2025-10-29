@@ -298,7 +298,7 @@ function MicroCourse() {
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("completedLessons") || "[]");
     setCompletedLessons(saved);
-    
+
     // Fetch next lesson from backend
     fetchNextLesson();
   }, []);
