@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { LogIn, Mail, Lock } from "lucide-react";
+import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
+
+const API_BASE_URL = "https://finity.onrender.com";
 
 function Login({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -8,23 +10,55 @@ function Login({ setIsAuthenticated }) {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    // TODO: Replace with actual API call
-    // For now, simulate login
-    localStorage.setItem("token", "dummy-token");
-    setIsAuthenticated(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    // Check if questionnaire is completed
-    const questionnaireCompleted = localStorage.getItem(
-      "questionnaireCompleted"
-    );
-    if (!questionnaireCompleted) {
-      navigate("/questionnaire");
-    } else {
-      navigate("/dashboard");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Login failed. Please check your credentials."
+        );
+      }
+
+      // Store authentication data
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("user_email", data.user_email);
+
+      setIsAuthenticated(true);
+
+      // Check if questionnaire is completed
+      const questionnaireCompleted = localStorage.getItem(
+        "questionnaireCompleted"
+      );
+      if (!questionnaireCompleted) {
+        navigate("/questionnaire");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setError(err.message || "An error occurred during login.");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,6 +98,13 @@ function Login({ setIsAuthenticated }) {
             <h2 className="text-2xl font-display font-semibold mb-6">
               Welcome Back
             </h2>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -106,10 +147,20 @@ function Login({ setIsAuthenticated }) {
 
               <button
                 type="submit"
-                className="btn-primary w-full flex items-center justify-center gap-2"
+                disabled={loading}
+                className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <LogIn className="w-5 h-5" />
-                Sign In
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-5 h-5" />
+                    Sign In
+                  </>
+                )}
               </button>
             </form>
 
