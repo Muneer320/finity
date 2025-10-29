@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
-
-const API_BASE_URL = "https://finity.onrender.com";
+import { API_BASE_URL } from "../utils/api";
 
 function Login({ setIsAuthenticated }) {
   const navigate = useNavigate();

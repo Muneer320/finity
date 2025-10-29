@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 
 function Questionnaire({ setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     age: "",
     occupation: "",
@@ -22,6 +23,50 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
   const totalSteps = 4;
 
   const handleNext = () => {
+    // Clear previous errors
+    setError("");
+
+    // Validation for each step
+    if (step === 1) {
+      if (!formData.age || !formData.occupation || !formData.income) {
+        setError("Please fill in all required fields in Step 1");
+        return;
+      }
+      if (formData.age < 18 || formData.age > 100) {
+        setError("Please enter a valid age (18-100)");
+        return;
+      }
+    }
+
+    if (step === 2) {
+      if (!formData.monthlyExpenses || !formData.savings || !formData.loans) {
+        setError("Please fill in all required fields in Step 2");
+        return;
+      }
+      if (formData.loans === "yes" && !formData.loanAmount) {
+        setError("Please enter your total loan amount");
+        return;
+      }
+    }
+
+    if (step === 3) {
+      if (
+        !formData.investments ||
+        !formData.experience ||
+        !formData.riskTolerance
+      ) {
+        setError("Please fill in all required fields in Step 3");
+        return;
+      }
+    }
+
+    if (step === 4) {
+      if (formData.financialGoals.length === 0) {
+        setError("Please select at least one financial goal");
+        return;
+      }
+    }
+
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
@@ -30,6 +75,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
   };
 
   const handleBack = () => {
+    setError(""); // Clear errors when going back
     if (step > 1) {
       setStep(step - 1);
     }
@@ -98,6 +144,17 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
           {/* Step Content */}
           <div className="card">
+            {/* Error Message Display */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-500 font-medium">Validation Error</p>
+                  <p className="text-red-400 text-sm mt-1">{error}</p>
+                </div>
+              </div>
+            )}
+
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-xl font-display font-semibold">
@@ -106,11 +163,13 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Age
+                    Age <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     required
+                    min="18"
+                    max="100"
                     className="input-field"
                     placeholder="25"
                     value={formData.age}
@@ -122,7 +181,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Occupation
+                    Occupation <span className="text-red-500">*</span>
                   </label>
                   <select
                     required
@@ -145,7 +204,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Monthly Income (₹)
+                    Monthly Income (₹) <span className="text-red-500">*</span>
                   </label>
                   <select
                     required
@@ -174,11 +233,13 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Average Monthly Expenses (₹)
+                    Average Monthly Expenses (₹){" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     required
+                    min="0"
                     className="input-field"
                     placeholder="30000"
                     value={formData.monthlyExpenses}
@@ -193,7 +254,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Current Savings (₹)
+                    Current Savings (₹) <span className="text-red-500">*</span>
                   </label>
                   <select
                     required
@@ -216,7 +277,8 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Do you have any active loans?
+                    Do you have any active loans?{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="flex gap-4">
                     <button
@@ -253,11 +315,13 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                 {formData.loans === "yes" && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Total Loan Amount (₹)
+                      Total Loan Amount (₹){" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       required
+                      min="0"
                       className="input-field"
                       placeholder="500000"
                       value={formData.loanAmount}
@@ -278,7 +342,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Current Investments
+                    Current Investments <span className="text-red-500">*</span>
                   </label>
                   <select
                     required
@@ -301,7 +365,8 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Investment Experience Level
+                    Investment Experience Level{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-1 gap-3">
                     {[
@@ -344,7 +409,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Risk Tolerance
+                    Risk Tolerance <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-1 gap-3">
                     {[
@@ -393,7 +458,10 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                 <h2 className="text-xl font-display font-semibold">
                   Financial Goals
                 </h2>
-                <p className="text-gray-400">Select all that apply</p>
+                <p className="text-gray-400">
+                  Select all that apply <span className="text-red-500">*</span>
+                  <span className="text-xs ml-2">(At least one required)</span>
+                </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[

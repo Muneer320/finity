@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
-
-const API_BASE_URL = "https://finity.onrender.com";
+import { API_BASE_URL } from "../utils/api";
 
 function Signup() {
   const navigate = useNavigate();
