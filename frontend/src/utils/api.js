@@ -21,7 +21,7 @@ export const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    
+
     // Try to parse JSON response
     let data;
     const contentType = response.headers.get("content-type");
@@ -45,12 +45,14 @@ export const apiRequest = async (endpoint, options = {}) => {
         }
         throw new Error(JSON.stringify(data.detail));
       }
-      
+
       // Handle server errors (500)
       if (response.status === 500) {
-        throw new Error(`Server Error: ${data.detail || data.raw || 'Internal Server Error'}`);
+        throw new Error(
+          `Server Error: ${data.detail || data.raw || "Internal Server Error"}`
+        );
       }
-      
+
       throw new Error(data.detail || `API Error: ${response.status}`);
     }
 
@@ -92,6 +94,28 @@ export const userAPI = {
     return apiRequest("/onboard", {
       method: "POST",
       body: JSON.stringify(onboardingData),
+    });
+  },
+};
+
+// Expense API calls
+export const expenseAPI = {
+  // Create a new expense
+  create: async (expenseData) => {
+    return apiRequest("/expenses", {
+      method: "POST",
+      body: JSON.stringify(expenseData),
+    });
+  },
+};
+
+// Income API calls
+export const incomeAPI = {
+  // Create a new income entry
+  create: async (incomeData) => {
+    return apiRequest("/incomes", {
+      method: "POST",
+      body: JSON.stringify(incomeData),
     });
   },
 };

@@ -14,12 +14,15 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
 } from "../utils/achievementManager";
+import { expenseAPI, incomeAPI } from "../utils/api";
 
 function Expenses() {
   const { showAchievement } = useAchievement();
   const [transactions, setTransactions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterType, setFilterType] = useState("all"); // all, income, expense
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     type: "expense",
     amount: "",
@@ -53,39 +56,72 @@ function Expenses() {
     setTransactions(saved);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const newTransaction = {
-      id: Date.now(),
-      ...formData,
-      amount: parseFloat(formData.amount),
-      timestamp: new Date().toISOString(),
-    };
+    try {
+      let response;
+      
+      if (formData.type === "expense") {
+        // Create expense via API
+        response = await expenseAPI.create({
+          amount: parseFloat(formData.amount),
+          category: formData.category,
+          note: formData.description,
+          date: formData.date || null,
+        });
+      } else {
+        // Create income via API
+        response = await incomeAPI.create({
+          amount: parseFloat(formData.amount),
+          source: formData.category,
+          date: formData.date || null,
+        });
+      }
 
-    const updated = [newTransaction, ...transactions];
-    setTransactions(updated);
-    localStorage.setItem("transactions", JSON.stringify(updated));
+      // Add to local state with backend response
+      const newTransaction = {
+        id: response.id,
+        type: formData.type,
+        amount: response.amount,
+        category: formData.type === "expense" ? response.category : response.source,
+        description: formData.type === "expense" ? response.note : `Income from ${response.source}`,
+        date: formData.date,
+        timestamp: response.date,
+        owner_id: response.owner_id,
+      };
 
-    // Award achievement for first transaction
-    const moneyManagerAchievement = {
-      icon: "💰",
-      name: ACHIEVEMENT_TYPES.MONEY_MANAGER,
-      description: "Logged your first transaction!",
-    };
-    const awarded = awardAchievement(moneyManagerAchievement);
-    if (awarded) {
-      showAchievement(moneyManagerAchievement);
+      const updated = [newTransaction, ...transactions];
+      setTransactions(updated);
+      localStorage.setItem("transactions", JSON.stringify(updated));
+
+      // Award achievement for first transaction
+      const moneyManagerAchievement = {
+        icon: "💰",
+        name: ACHIEVEMENT_TYPES.MONEY_MANAGER,
+        description: "Logged your first transaction!",
+      };
+      const awarded = awardAchievement(moneyManagerAchievement);
+      if (awarded) {
+        showAchievement(moneyManagerAchievement);
+      }
+
+      setFormData({
+        type: "expense",
+        amount: "",
+        category: "",
+        description: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+      setShowAddModal(false);
+    } catch (err) {
+      console.error("Failed to create transaction:", err);
+      setError(err.message || "Failed to save transaction. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setFormData({
-      type: "expense",
-      amount: "",
-      category: "",
-      description: "",
-      date: new Date().toISOString().split("T")[0],
-    });
-    setShowAddModal(false);
   };
 
   const handleDelete = (id) => {
@@ -309,6 +345,12 @@ function Expenses() {
                 Add Transaction
               </h3>
 
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm">
+                  {error}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -425,13 +467,25 @@ function Expenses() {
                 </div>
 
                 <div className="flex gap-3 pt-4">
-                  <button type="submit" className="btn-primary flex-1">
-                    Add Transaction
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className={`btn-primary flex-1 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      'Add Transaction'
+                    )}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="btn-secondary flex-1"
+                    disabled={loading}
+                    className={`btn-secondary flex-1 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     Cancel
                   </button>
