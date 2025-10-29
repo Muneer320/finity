@@ -15,6 +15,7 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
     monthlyExpenses: "",
     savings: "",
     investments: "",
+    investmentAmount: "", // Add investment amount field
     loans: "",
     loanAmount: "",
     financialGoals: [],
@@ -62,6 +63,10 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
         setError("Please fill in all required fields in Step 3");
         return;
       }
+      if (formData.investments !== "none" && !formData.investmentAmount) {
+        setError("Please enter your total investment amount");
+        return;
+      }
     }
 
     if (step === 4) {
@@ -90,6 +95,11 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
     setError("");
 
     try {
+      // Convert investments selection to numeric value
+      const investmentAmount = formData.investments === "none" 
+        ? 0 
+        : parseFloat(formData.investmentAmount) || 0;
+      
       // Prepare data for backend API
       const onboardingData = {
         age: parseInt(formData.age),
@@ -99,16 +109,16 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
         current_savings: parseFloat(formData.savings),
         loan_amount:
           formData.loans === "yes" ? parseFloat(formData.loanAmount) : 0,
-        current_investment: parseFloat(formData.investments),
+        current_investment: investmentAmount, // Use numeric value
         experience_level: formData.experience,
         risk_tolerance: formData.riskTolerance,
         financial_confidence: formData.financialConfidence,
         fixed_budget:
           parseFloat(formData.income) - parseFloat(formData.monthlyExpenses), // Calculate fixed budget
-        goals_data: formData.financialGoals, // Send as simple array of strings
+        goals_data: formData.financialGoals.map((goal) => ({ goal })), // Array of objects with 'goal' key
       };
 
-      console.log('Submitting onboarding data:', onboardingData);
+      console.log("Submitting onboarding data:", onboardingData);
 
       // Submit to backend
       const response = await userAPI.onboard(onboardingData);
@@ -399,6 +409,25 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
                     </option>
                   </select>
                 </div>
+
+                {formData.investments && formData.investments !== "none" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Total Investment Amount <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      className="input-field"
+                      placeholder="50000"
+                      value={formData.investmentAmount || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, investmentAmount: e.target.value })
+                      }
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
