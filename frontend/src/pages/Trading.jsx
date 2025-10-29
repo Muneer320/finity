@@ -210,9 +210,9 @@ function Trading() {
     try {
       // Execute buy action via backend API
       const actionData = {
-        asset_type: selectedStock.type || "stock", // "stock" or "fund"
+        asset_type: selectedStock.type || "Stock", // "Stock" or "Mutual Fund"
         symbol: selectedStock.symbol,
-        action: "buy",
+        action: "Buy", // Capitalized as expected by backend
         amount: quantity,
       };
 
@@ -306,13 +306,14 @@ function Trading() {
 
       // Execute sell action via backend API
       const actionData = {
-        asset_type: selectedHolding.type || "stock", // "stock" or "fund"
+        asset_type: selectedHolding.type || "Stock", // "Stock" or "Mutual Fund"
         symbol: selectedHolding.symbol,
-        action: "sell",
+        action: "Sell", // Capitalized as expected by backend
         amount: quantity,
       };
 
       const response = await marketAPI.executeAction(actionData);
+      console.log("Sell action response:", response);
       console.log("Sell action response:", response);
 
       // Update local portfolio
