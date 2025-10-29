@@ -319,12 +319,17 @@ function Profile() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {userData.financialGoals?.map((goal, index) => (
+                {(userData.goals_data || userData.financialGoals)?.map((goal, index) => (
                   <div
                     key={index}
                     className="p-4 bg-gradient-to-r from-primary-600/10 to-purple-600/10 rounded-lg border border-primary-600/20"
                   >
-                    <span className="font-medium">{goal}</span>
+                    <div className="font-medium">{goal.name || goal}</div>
+                    {goal.target && (
+                      <div className="text-sm text-gray-400 mt-1">
+                        Target: {formatCurrency(goal.target)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
