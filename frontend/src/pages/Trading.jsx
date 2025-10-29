@@ -25,7 +25,7 @@ import { marketAPI } from "../utils/api";
 
 function Trading() {
   const { showAchievement } = useAchievement();
-  const [balance, setBalance] = useState(100000); // Starting F-Coins
+  const [balance, setBalance] = useState(100000); // Starting F-Coins - fallback
   const [selectedStock, setSelectedStock] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [portfolio, setPortfolio] = useState([]);
@@ -48,6 +48,11 @@ function Trading() {
       const response = await marketAPI.getLiveFeed();
       setLivePortfolio(response);
       console.log("Live portfolio data:", response);
+
+      // Update balance from API if available
+      if (response.available_balance !== undefined) {
+        setBalance(response.available_balance);
+      }
     } catch (err) {
       console.error("Failed to fetch live portfolio:", err);
     } finally {
@@ -98,8 +103,8 @@ function Trading() {
     return points;
   };
 
-  // Mock stocks data
-  const stocks = [
+  // Fallback mock stocks data
+  const fallbackStocks = [
     {
       id: 1,
       symbol: "TECH",
@@ -167,7 +172,7 @@ function Trading() {
     },
   ];
 
-  const mutualFunds = [
+  const fallbackMutualFunds = [
     {
       id: 6,
       symbol: "BALANCED",
@@ -206,13 +211,22 @@ function Trading() {
     },
   ];
 
-  // Generate trends for each asset
+  // Use API data if available, otherwise use fallback
+  const stocks = livePortfolio?.available_stocks || fallbackStocks;
+  const mutualFunds =
+    livePortfolio?.available_mutual_funds || fallbackMutualFunds;
+
+  // Generate trends for each asset (only if not already present from API)
   stocks.forEach((stock) => {
-    stock.trend = generateTrendData(stock.price, stock.positive);
+    if (!stock.trend) {
+      stock.trend = generateTrendData(stock.price, stock.positive);
+    }
   });
 
   mutualFunds.forEach((fund) => {
-    fund.trend = generateTrendData(fund.price, fund.positive);
+    if (!fund.trend) {
+      fund.trend = generateTrendData(fund.price, fund.positive);
+    }
   });
 
   const allAssets = [...stocks, ...mutualFunds];

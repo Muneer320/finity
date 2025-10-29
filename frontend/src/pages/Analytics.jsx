@@ -346,7 +346,8 @@ function Analytics() {
                   <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white">
                     <p className="text-sm opacity-90 mb-1">Total Gain</p>
                     <p className="text-2xl font-bold font-mono">
-                      ₹{simResult.simulation_result.total_gain?.toLocaleString()}
+                      ₹
+                      {simResult.simulation_result.total_gain?.toLocaleString()}
                     </p>
                     <p className="text-xs opacity-75 mt-1">
                       {(
@@ -364,9 +365,7 @@ function Analytics() {
                       ₹
                       {simResult.simulation_result.total_contributed?.toLocaleString()}
                     </p>
-                    <p className="text-xs opacity-75 mt-1">
-                      Your investment
-                    </p>
+                    <p className="text-xs opacity-75 mt-1">Your investment</p>
                   </div>
 
                   <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-4 text-white">
