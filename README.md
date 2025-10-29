@@ -22,12 +22,14 @@ An AI-powered application that democratizes financial literacy through personali
 ## ✨ Key Features
 
 ### 🤖 AI Financial Coach (Chatbot)
+
 - **Personalized Advice:** Context-aware responses based on user profile, goals, and risk tolerance
 - **Real-time Guidance:** Instant answers to financial questions in simple language
 - **Conversation History:** Maintains context across sessions for continuity
 - **Achievement Integration:** Awards badges for first chat interactions
 
 ### 💹 Paper Trading Simulator
+
 - **Virtual Currency:** Start with 100,000 F-Coins to practice investing
 - **Live Market Feed:** Real-time portfolio tracking with gain/loss analysis
 - **Stocks & Mutual Funds:** Trade diverse assets with simulated price movements
@@ -36,6 +38,7 @@ An AI-powered application that democratizes financial literacy through personali
 - **Portfolio Analytics:** Track holdings, performance, and diversification
 
 ### 📊 Investment Simulator & AI Learning
+
 - **Long-term Projections:** Simulate investment growth over years
 - **Risk Modeling:** See returns based on different risk tolerances (Low/Medium/High)
 - **AI Masterclass:** Get personalized micro-courses based on simulation results
@@ -43,6 +46,7 @@ An AI-powered application that democratizes financial literacy through personali
 - **Beautiful Visualizations:** Gradient cards displaying key metrics
 
 ### 🎓 Micro-Learning Courses
+
 - **Personalized Curriculum:** AI-driven course recommendations based on user activity
 - **Progress Tracking:** Monitor completed lessons and learning time
 - **Interactive Content:** Engaging lessons with practical examples
@@ -50,6 +54,7 @@ An AI-powered application that democratizes financial literacy through personali
 - **Achievement Rewards:** Earn badges for learning milestones
 
 ### 🎮 Gamification System
+
 - **Streak Tracking:** Maintain daily expense logging streaks with fire emoji display
 - **Daily Prompts:** Randomized check-in messages to encourage engagement
 - **Achievement Badges:** Unlock rewards for milestones (First Trade, Diamond Hands, etc.)
@@ -57,12 +62,14 @@ An AI-powered application that democratizes financial literacy through personali
 - **Behavioral Nudges:** Positive reinforcement for good financial habits
 
 ### 📈 Expense & Income Tracking
+
 - **Transaction Logging:** Record expenses and income with categories
 - **Visual Analytics:** Category breakdowns, daily trends, and monthly patterns
 - **Savings Rate:** Calculate and display financial health metrics
 - **Heatmap View:** 90-day activity visualization
 
 ### 👤 Smart Onboarding
+
 - **Multi-step Questionnaire:** Collect comprehensive financial profile
 - **Risk Assessment:** Determine user's investment risk tolerance
 - **Goal Setting:** Define financial objectives with target amounts
@@ -76,6 +83,7 @@ An AI-powered application that democratizes financial literacy through personali
 ### Tech Stack
 
 **Frontend:**
+
 - ⚛️ React 18.3 with Vite 5.4
 - 🎨 Tailwind CSS for styling
 - 🌊 Framer Motion for animations
@@ -83,6 +91,7 @@ An AI-powered application that democratizes financial literacy through personali
 - 🔍 Lucide React for icons
 
 **Backend:**
+
 - 🚀 FastAPI (Python)
 - 🗄️ SQLAlchemy ORM
 - 🔐 JWT Authentication
@@ -90,6 +99,7 @@ An AI-powered application that democratizes financial literacy through personali
 - 📊 Real-time data simulation
 
 **Deployment:**
+
 - Frontend: Vercel (https://finityy.vercel.app)
 - Backend: Render (https://finity-kb8q.onrender.com)
 
@@ -98,6 +108,7 @@ An AI-powered application that democratizes financial literacy through personali
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 16+ and npm
 - Python 3.8+
 - Git
@@ -105,16 +116,19 @@ An AI-powered application that democratizes financial literacy through personali
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
+
 ```bash
 cd frontend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -172,31 +186,38 @@ The API will be available at `http://localhost:8000`
 ## 📡 API Endpoints
 
 ### 🔐 Authentication
+
 - `POST /signup` - Create new user account
 - `POST /login` - User login with JWT token
 
 ### 👤 User Management
+
 - `GET /users/me` - Get current user profile
 - `POST /onboard` - Submit onboarding questionnaire data
 
 ### 💰 Transactions
+
 - `POST /expenses` - Log new expense
 - `POST /incomes` - Log new income
 
 ### 🎮 Gamification
+
 - `GET /gamification/streak` - Get current expense logging streak
 - `GET /gamification/daily-prompt` - Get randomized check-in prompt
 
 ### 💹 Trading & Market
+
 - `GET /market/live-feed` - Get portfolio holdings with real-time values
 - `POST /simulate/invest/action` - Execute buy/sell trade action
 - `GET /market/asset-history/{symbol}` - Get historical price data for charting
 - `POST /simulate/invest/learn` - Run investment simulation with AI insights
 
 ### 🤖 AI Features
+
 - `POST /chat` - Send message to AI financial coach
 
 ### 🎓 Learning
+
 - `GET /course/next-lesson` - Get next lesson for user
 - `POST /course/complete-lesson` - Mark current lesson as complete
 
@@ -249,6 +270,7 @@ finity/
 ## 🎨 Design Philosophy
 
 ### User Experience
+
 - **Mobile-First:** Responsive design for accessibility
 - **Dark Mode:** Eye-friendly interface for extended use
 - **Animations:** Smooth transitions using Framer Motion
@@ -256,6 +278,7 @@ finity/
 - **Gradients & Icons:** Visual hierarchy and modern aesthetics
 
 ### Educational Approach
+
 - **Learning by Doing:** Practice before real investment
 - **Personalization:** AI adapts to user's financial situation
 - **Microlearning:** 5-minute digestible lessons
@@ -278,12 +301,14 @@ finity/
 ## 🎯 Impact & Vision
 
 **Current Impact:**
+
 - ✅ Removes barriers to financial education
 - ✅ Builds confidence through risk-free practice
 - ✅ Encourages consistent financial habits
 - ✅ Provides personalized, scalable coaching
 
 **Future Roadmap:**
+
 - 📱 Mobile app (React Native)
 - 🌍 Multi-language support (vernacular)
 - 🏆 Social features & leaderboards
@@ -297,12 +322,14 @@ finity/
 ## 👥 Team
 
 **Muneer** - Full Stack Developer
+
 - Frontend architecture & UI/UX
 - Backend API integration
 - Trading simulator implementation
 - Deployment & DevOps
 
 **Amogh** - Backend Developer & AI Integration
+
 - Database design & ORM
 - AI chatbot integration
 - Gamification backend logic
@@ -327,6 +354,7 @@ finity/
 **Solution:** Democratize financial literacy through gamified learning, AI coaching, and risk-free investment practice.
 
 **Innovation:**
+
 - AI-generated personalized micro-courses
 - Real-time investment simulation with feedback
 - Behavioral gamification for habit formation
@@ -345,6 +373,7 @@ This project was created for a hackathon. All rights reserved.
 Built with ❤️ for improving financial literacy and inclusion.
 
 **Technologies Used:**
+
 - React, Vite, Tailwind CSS, Framer Motion
 - FastAPI, SQLAlchemy, JWT
 - OpenAI/Google Gemini AI
@@ -355,6 +384,7 @@ Built with ❤️ for improving financial literacy and inclusion.
 ## 📞 Contact
 
 For questions or collaboration:
+
 - GitHub: [Muneer320](https://github.com/Muneer320)
 - Project: [Finity Repository](https://github.com/Muneer320/finity)
 - Live Demo: [https://finityy.vercel.app](https://finityy.vercel.app)
