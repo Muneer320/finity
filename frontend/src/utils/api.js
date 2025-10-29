@@ -1,6 +1,10 @@
 // API Configuration and utility functions
 
-export const API_BASE_URL = "https://finity.onrender.com";
+// Use proxy in development, direct URL in production
+export const API_BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "/api"
+    : "https://finity.onrender.com";
 
 // Helper function for API requests
 export const apiRequest = async (endpoint, options = {}) => {
