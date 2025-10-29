@@ -20,8 +20,9 @@ from ai.coach_agent import generate_investment_micro_course, run_mock_simulation
 origins = [
     "http://localhost:3000",       # Local Frontend Development URL
     "http://127.0.0.1:3000",       # Alternative local URL
-    "https://finityy.vercel.app", # <--- IMPORTANT: Replace with the actual frontend URL
-    "https://finity.onrender.com", # Optionally allow access from the backend's own domain
+    "http://localhost:5173",       # Vite dev server
+    "https://finityy.vercel.app",  # Production frontend URL
+    "https://finity.onrender.com", # Backend's own domain
 ]
 # --- APP INITIALIZATION ---
 load_dotenv()
@@ -29,7 +30,7 @@ app = FastAPI(title="Finity: The Frugal Friend Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ WARNING: Not secure for production!
+    allow_origins=origins,  # Use the specific origins list instead of "*"
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
