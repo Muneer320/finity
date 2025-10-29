@@ -4,7 +4,7 @@
 export const API_BASE_URL =
   import.meta.env.MODE === "development"
     ? "/api"
-    : "https://finity.onrender.com";
+    : "https://finity-kb8q.onrender.com";
 
 // Helper function for API requests
 export const apiRequest = async (endpoint, options = {}) => {
