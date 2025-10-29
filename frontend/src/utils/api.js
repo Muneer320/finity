@@ -21,20 +21,36 @@ export const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    
+    // Try to parse JSON response
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      // Handle non-JSON responses (like plain text errors)
+      const text = await response.text();
+      data = { detail: text, raw: text };
+    }
 
     if (!response.ok) {
       // Handle validation errors (422)
       if (response.status === 422 && data.detail) {
         // Format validation error details
         if (Array.isArray(data.detail)) {
-          const errors = data.detail.map(err => 
-            `${err.loc.join(' -> ')}: ${err.msg}`
-          ).join(', ');
+          const errors = data.detail
+            .map((err) => `${err.loc.join(" -> ")}: ${err.msg}`)
+            .join(", ");
           throw new Error(`Validation Error: ${errors}`);
         }
         throw new Error(JSON.stringify(data.detail));
       }
+      
+      // Handle server errors (500)
+      if (response.status === 500) {
+        throw new Error(`Server Error: ${data.detail || data.raw || 'Internal Server Error'}`);
+      }
+      
       throw new Error(data.detail || `API Error: ${response.status}`);
     }
 
