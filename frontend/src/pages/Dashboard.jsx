@@ -7,6 +7,7 @@ import {
   Award,
   ArrowUpRight,
   ArrowDownRight,
+  Flame,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAchievement } from "../context/AchievementContext";
@@ -16,9 +17,12 @@ import {
   recordLogin,
 } from "../utils/achievementManager";
 import { useUserProfile } from "../hooks/useUserProfile";
+import { gamificationAPI } from "../utils/api";
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
+  const [streak, setStreak] = useState(0);
+  const [streakLoading, setStreakLoading] = useState(true);
   const { showAchievement } = useAchievement();
   const { profile, loading: profileLoading, refreshProfile } = useUserProfile();
 
@@ -30,6 +34,21 @@ function Dashboard() {
       const cached = JSON.parse(localStorage.getItem("userProfile") || "{}");
       setUserData(cached);
     }
+
+    // Fetch user's streak
+    const fetchStreak = async () => {
+      try {
+        const response = await gamificationAPI.getStreak();
+        setStreak(response.streak || 0);
+      } catch (err) {
+        console.error("Failed to fetch streak:", err);
+        setStreak(0);
+      } finally {
+        setStreakLoading(false);
+      }
+    };
+
+    fetchStreak();
 
     // Record login for streak tracking
     recordLogin();
@@ -174,6 +193,48 @@ function Dashboard() {
               </div>
             );
           })}
+        </div>
+
+        {/* Streak Card */}
+        <div className="mb-8">
+          <div className="card bg-gradient-to-br from-orange-500/10 via-red-500/10 to-yellow-500/10 border-2 border-orange-500/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-4 bg-orange-500/20 rounded-xl">
+                  <Flame className="w-8 h-8 text-orange-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-display font-semibold text-gray-900 dark:text-white mb-1">
+                    Expense Logging Streak
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    Keep logging daily to maintain your streak! 🔥
+                  </p>
+                </div>
+              </div>
+              <div className="text-center">
+                {streakLoading ? (
+                  <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <div className="text-5xl font-display font-bold text-orange-500">
+                      {streak}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {streak === 1 ? "day" : "days"}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            {streak >= 3 && (
+              <div className="mt-4 pt-4 border-t border-orange-500/20">
+                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                  🎉 Amazing! You're on fire! Keep it up!
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Actions */}

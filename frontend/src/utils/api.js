@@ -120,6 +120,23 @@ export const incomeAPI = {
   },
 };
 
+// Gamification API calls
+export const gamificationAPI = {
+  // Get user's current expense logging streak
+  getStreak: async () => {
+    return apiRequest("/gamification/streak", {
+      method: "GET",
+    });
+  },
+
+  // Get randomized daily check-in prompt
+  getDailyPrompt: async () => {
+    return apiRequest("/gamification/daily-prompt", {
+      method: "GET",
+    });
+  },
+};
+
 // Storage helpers
 export const storage = {
   setAuth: (data) => {
