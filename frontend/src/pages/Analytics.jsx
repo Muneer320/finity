@@ -326,19 +326,83 @@ function Analytics() {
           </button>
 
           {simResult && (
-            <div className="bg-white dark:bg-dark-800 rounded-lg p-4 border-2 border-primary-200 dark:border-primary-800">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                Simulation Result & AI Insights
-              </h3>
-              <div className="prose dark:prose-invert max-w-none text-sm">
-                {typeof simResult === "string" ? (
-                  <p>{simResult}</p>
-                ) : (
-                  <pre className="whitespace-pre-wrap bg-gray-50 dark:bg-dark-900 p-3 rounded">
-                    {JSON.stringify(simResult, null, 2)}
-                  </pre>
-                )}
-              </div>
+            <div className="space-y-6">
+              {/* Simulation Results Cards */}
+              {simResult.simulation_result && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">
+                      Projected Final Value
+                    </p>
+                    <p className="text-2xl font-bold font-mono">
+                      ₹
+                      {simResult.simulation_result.projected_final_value?.toLocaleString()}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      After {simResult.simulation_result.total_years} years
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">Total Gain</p>
+                    <p className="text-2xl font-bold font-mono">
+                      ₹{simResult.simulation_result.total_gain?.toLocaleString()}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {(
+                        (simResult.simulation_result.total_gain /
+                          simResult.simulation_result.total_contributed) *
+                        100
+                      ).toFixed(1)}
+                      % growth
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">Total Contributed</p>
+                    <p className="text-2xl font-bold font-mono">
+                      ₹
+                      {simResult.simulation_result.total_contributed?.toLocaleString()}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      Your investment
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">Annual Return</p>
+                    <p className="text-2xl font-bold font-mono">
+                      {simResult.simulation_result.mock_annual_rate}%
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {simRisk} risk profile
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* AI-Generated Course Content */}
+              {simResult.course_content && (
+                <div className="bg-white dark:bg-dark-800 rounded-lg p-6 border-2 border-primary-200 dark:border-primary-800">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl">
+                      🎓
+                    </div>
+                    <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                      AI-Generated Investment Masterclass
+                    </h3>
+                  </div>
+                  <div
+                    className="prose dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: simResult.course_content
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/### (.*?)(\n|$)/g, "<h3>$1</h3>")
+                        .replace(/\n/g, "<br/>"),
+                    }}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
