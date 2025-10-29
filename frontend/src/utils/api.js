@@ -153,6 +153,49 @@ export const marketAPI = {
       body: JSON.stringify(actionData),
     });
   },
+
+  // Get historical data for a specific asset symbol
+  getAssetHistory: async (symbol) => {
+    return apiRequest(`/market/asset-history/${symbol}`, {
+      method: "GET",
+    });
+  },
+
+  // Run investment simulation and get AI-generated micro-course
+  simulateInvestment: async (simulationData) => {
+    return apiRequest("/simulate/invest/learn", {
+      method: "POST",
+      body: JSON.stringify(simulationData),
+    });
+  },
+};
+
+// Chat API calls
+export const chatAPI = {
+  // Send a message to the AI chatbot
+  sendMessage: async (message) => {
+    return apiRequest("/chat", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+  },
+};
+
+// Course API calls
+export const courseAPI = {
+  // Get the next lesson for the user
+  getNextLesson: async () => {
+    return apiRequest("/course/next-lesson", {
+      method: "GET",
+    });
+  },
+
+  // Mark current lesson as complete
+  completeLesson: async () => {
+    return apiRequest("/course/complete-lesson", {
+      method: "POST",
+    });
+  },
 };
 
 // Storage helpers

@@ -6,6 +6,7 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
 } from "../utils/achievementManager";
+import { chatAPI } from "../utils/api";
 
 function ChatBot() {
   const [messages, setMessages] = useState([
@@ -46,19 +47,21 @@ function ChatBot() {
     };
 
     setMessages([...messages, userMessage]);
+    const currentInput = input;
     setInput("");
     setIsLoading(true);
 
-    // TODO: Replace with actual API call
-    setTimeout(() => {
+    try {
+      // Call backend chat API
+      const response = await chatAPI.sendMessage(currentInput);
+
       const aiResponse = {
         role: "assistant",
-        content:
-          "That's a great question! Based on your profile, I'd recommend starting with index funds or ETFs for diversification. Since you're a beginner, focus on understanding the basics before diving into individual stocks. Would you like me to explain more about index funds?",
+        content: response.reply || response,
         timestamp: new Date(),
       };
+
       setMessages((prev) => [...prev, aiResponse]);
-      setIsLoading(false);
 
       // Award achievement for first chat
       const firstChatAchievement = {
@@ -70,7 +73,20 @@ function ChatBot() {
       if (awarded) {
         showAchievement(firstChatAchievement);
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Chat error:", error);
+
+      // Show error message to user
+      const errorResponse = {
+        role: "assistant",
+        content:
+          "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleQuickPrompt = (prompt) => {

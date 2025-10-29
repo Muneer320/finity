@@ -37,6 +37,9 @@ function Trading() {
   const [fundFilter, setFundFilter] = useState("all");
   const [tradeMode, setTradeMode] = useState("buy"); // buy or sell
   const [selectedHolding, setSelectedHolding] = useState(null);
+  const [assetHistory, setAssetHistory] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedAssetForChart, setSelectedAssetForChart] = useState(null);
 
   // Fetch live portfolio from backend
   const fetchLivePortfolio = async () => {
@@ -60,6 +63,22 @@ function Trading() {
     const interval = setInterval(fetchLivePortfolio, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch asset history from backend
+  const fetchAssetHistory = async (symbol) => {
+    setLoadingHistory(true);
+    setSelectedAssetForChart(symbol);
+    try {
+      const history = await marketAPI.getAssetHistory(symbol);
+      setAssetHistory(history);
+      console.log("Asset history for", symbol, ":", history);
+    } catch (err) {
+      console.error("Failed to fetch asset history:", err);
+      setAssetHistory(null);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   // Generate mock trend data for stocks
   const generateTrendData = (basePrice, positive) => {
@@ -620,45 +639,60 @@ function Trading() {
                   .map((stock) => (
                     <div
                       key={stock.id}
-                      onClick={() => setSelectedStock(stock)}
-                      className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      className={`p-4 rounded-lg border-2 transition-all ${
                         selectedStock?.id === stock.id
                           ? "border-primary-600 bg-primary-600/5"
                           : "border-gray-200 dark:border-dark-800 hover:border-gray-300 dark:hover:border-dark-700"
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-gray-900 dark:text-white">
-                              {stock.symbol}
-                            </span>
-                            <span className="badge bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-gray-400 text-xs">
-                              {stock.category}
-                            </span>
+                      <div
+                        onClick={() => setSelectedStock(stock)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-gray-900 dark:text-white">
+                                {stock.symbol}
+                              </span>
+                              <span className="badge bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-gray-400 text-xs">
+                                {stock.category}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {stock.name}
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {stock.name}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-mono font-bold text-gray-900 dark:text-white">
-                            ₹{stock.price}
-                          </p>
-                          <p
-                            className={`text-sm flex items-center gap-1 ${
-                              stock.positive ? "text-green-500" : "text-red-500"
-                            }`}
-                          >
-                            {stock.positive ? (
-                              <TrendingUp className="w-4 h-4" />
-                            ) : (
-                              <TrendingDown className="w-4 h-4" />
-                            )}
-                            {stock.change}%
-                          </p>
+                          <div className="text-right">
+                            <p className="font-mono font-bold text-gray-900 dark:text-white">
+                              ₹{stock.price}
+                            </p>
+                            <p
+                              className={`text-sm flex items-center gap-1 ${
+                                stock.positive
+                                  ? "text-green-500"
+                                  : "text-red-500"
+                              }`}
+                            >
+                              {stock.positive ? (
+                                <TrendingUp className="w-4 h-4" />
+                              ) : (
+                                <TrendingDown className="w-4 h-4" />
+                              )}
+                              {stock.change}%
+                            </p>
+                          </div>
                         </div>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fetchAssetHistory(stock.symbol);
+                        }}
+                        className="mt-2 text-xs text-primary-600 dark:text-primary-400 hover:underline w-full text-left"
+                      >
+                        📊 View Price History
+                      </button>
                     </div>
                   ))}
               </div>
@@ -1131,6 +1165,42 @@ function Trading() {
             </div>
           </div>
         </div>
+
+        {/* Asset History Chart Modal */}
+        {assetHistory && selectedAssetForChart && (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setAssetHistory(null);
+              setSelectedAssetForChart(null);
+            }}
+          >
+            <div
+              className="bg-white dark:bg-dark-900 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                  {selectedAssetForChart} - Price History
+                </h3>
+                <button
+                  onClick={() => {
+                    setAssetHistory(null);
+                    setSelectedAssetForChart(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="prose dark:prose-invert max-w-none">
+                <pre className="text-sm bg-gray-100 dark:bg-dark-800 p-4 rounded-lg overflow-auto">
+                  {JSON.stringify(assetHistory, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

@@ -26,15 +26,14 @@ function Profile() {
     if (profile) {
       // Parse goals_data if it's a JSON string
       const processedProfile = { ...profile };
-      if (typeof profile.goals_data === 'string') {
+      if (typeof profile.goals_data === "string") {
         try {
           processedProfile.goals_data = JSON.parse(profile.goals_data);
         } catch (e) {
-          console.error('Failed to parse goals_data:', e);
+          console.error("Failed to parse goals_data:", e);
         }
       }
-      console.log('Profile data:', processedProfile);
-      console.log('Goals data:', processedProfile.goals_data);
+      console.log("Goals data:", processedProfile.goals_data);
       setUserData(processedProfile);
       setEditedData(processedProfile);
     } else {
@@ -330,7 +329,8 @@ function Profile() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {(userData.goals_data || userData.financialGoals)?.length > 0 ? (
+                {(userData.goals_data || userData.financialGoals)?.length >
+                0 ? (
                   (userData.goals_data || userData.financialGoals).map(
                     (goal, index) => (
                       <div
