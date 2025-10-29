@@ -29,10 +29,10 @@ app = FastAPI(title="Finity: The Frugal Friend Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,             # Use the defined whitelist
-    allow_credentials=True,            # Allows cookies, authorization headers, etc. (Needed for JWT)
-    allow_methods=["*"],               # Allows all methods (GET, POST, PUT, DELETE)
-    allow_headers=["*"],               # Allows all headers (Needed for Authorization: Bearer <token>)
+    allow_origins=["*"],  # ⚠️ WARNING: Not secure for production!
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # NOTE: Tables must be created. Assuming this was done successfully with the Supabase connection.
