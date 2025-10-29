@@ -24,8 +24,18 @@ function Profile() {
   useEffect(() => {
     // Use profile from backend if available, otherwise fallback to localStorage
     if (profile) {
-      setUserData(profile);
-      setEditedData(profile);
+      // Parse goals_data if it's a JSON string
+      const processedProfile = { ...profile };
+      if (typeof profile.goals_data === "string") {
+        try {
+          processedProfile.goals_data = JSON.parse(profile.goals_data);
+        } catch (e) {
+          console.error("Failed to parse goals_data:", e);
+        }
+      }
+      console.log("Goals data:", processedProfile.goals_data);
+      setUserData(processedProfile);
+      setEditedData(processedProfile);
     } else {
       const cached = JSON.parse(localStorage.getItem("userProfile") || "{}");
       setUserData(cached);
@@ -319,14 +329,28 @@ function Profile() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {userData.financialGoals?.map((goal, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-gradient-to-r from-primary-600/10 to-purple-600/10 rounded-lg border border-primary-600/20"
-                  >
-                    <span className="font-medium">{goal}</span>
+                {(userData.goals_data || userData.financialGoals)?.length >
+                0 ? (
+                  (userData.goals_data || userData.financialGoals).map(
+                    (goal, index) => (
+                      <div
+                        key={index}
+                        className="p-4 bg-gradient-to-r from-primary-600/10 to-purple-600/10 rounded-lg border border-primary-600/20"
+                      >
+                        <div className="font-medium">{goal.name || goal}</div>
+                        {goal.target && (
+                          <div className="text-sm text-gray-400 mt-1">
+                            Target: {formatCurrency(goal.target)}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  )
+                ) : (
+                  <div className="col-span-2 text-center text-gray-400 py-8">
+                    No financial goals set yet
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

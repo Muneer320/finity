@@ -5,12 +5,22 @@ import {
   TrendingUp,
   Calendar,
   DollarSign,
+  Target,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { marketAPI } from "../utils/api";
 
 function Analytics() {
   const [transactions, setTransactions] = useState([]);
   const [timeRange, setTimeRange] = useState("month"); // week, month, year
+
+  // Investment Simulator State
+  const [simStart, setSimStart] = useState(10000);
+  const [simMonthly, setSimMonthly] = useState(5000);
+  const [simYears, setSimYears] = useState(10);
+  const [simRisk, setSimRisk] = useState("Medium");
+  const [simResult, setSimResult] = useState(null);
+  const [simLoading, setSimLoading] = useState(false);
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("transactions") || "[]");
@@ -147,6 +157,26 @@ function Analytics() {
     "bg-orange-600",
   ];
 
+  // Handle investment simulation
+  const handleSimulate = async () => {
+    setSimLoading(true);
+    try {
+      const result = await marketAPI.simulateInvestment({
+        start: simStart,
+        monthly: simMonthly,
+        years: simYears,
+        risk: simRisk,
+      });
+      setSimResult(result);
+      console.log("Simulation result:", result);
+    } catch (error) {
+      console.error("Simulation error:", error);
+      setSimResult("Error running simulation. Please try again.");
+    } finally {
+      setSimLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="p-8">
@@ -215,6 +245,165 @@ function Analytics() {
               {transactions.length}
             </p>
           </div>
+        </div>
+
+        {/* Investment Simulator */}
+        <div className="card mb-6 bg-gradient-to-br from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20">
+          <div className="flex items-center gap-3 mb-4">
+            <Target className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-white">
+              Investment Simulator
+            </h2>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Simulate long-term investment growth and get AI-generated learning
+            insights
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Initial Amount (₹)
+              </label>
+              <input
+                type="number"
+                value={simStart}
+                onChange={(e) => setSimStart(Number(e.target.value))}
+                className="input-field"
+                min="0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Monthly Investment (₹)
+              </label>
+              <input
+                type="number"
+                value={simMonthly}
+                onChange={(e) => setSimMonthly(Number(e.target.value))}
+                className="input-field"
+                min="0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Investment Period (Years)
+              </label>
+              <input
+                type="number"
+                value={simYears}
+                onChange={(e) => setSimYears(Number(e.target.value))}
+                className="input-field"
+                min="1"
+                max="50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Risk Tolerance
+              </label>
+              <select
+                value={simRisk}
+                onChange={(e) => setSimRisk(e.target.value)}
+                className="input-field"
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSimulate}
+            disabled={simLoading}
+            className="btn-primary mb-4"
+          >
+            {simLoading ? "Simulating..." : "Run Simulation & Learn"}
+          </button>
+
+          {simResult && (
+            <div className="space-y-6">
+              {/* Simulation Results Cards */}
+              {simResult.simulation_result && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">
+                      Projected Final Value
+                    </p>
+                    <p className="text-2xl font-bold font-mono">
+                      ₹
+                      {simResult.simulation_result.projected_final_value?.toLocaleString()}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      After {simResult.simulation_result.total_years} years
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">Total Gain</p>
+                    <p className="text-2xl font-bold font-mono">
+                      ₹
+                      {simResult.simulation_result.total_gain?.toLocaleString()}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {(
+                        (simResult.simulation_result.total_gain /
+                          simResult.simulation_result.total_contributed) *
+                        100
+                      ).toFixed(1)}
+                      % growth
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">Total Contributed</p>
+                    <p className="text-2xl font-bold font-mono">
+                      ₹
+                      {simResult.simulation_result.total_contributed?.toLocaleString()}
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">Your investment</p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-4 text-white">
+                    <p className="text-sm opacity-90 mb-1">Annual Return</p>
+                    <p className="text-2xl font-bold font-mono">
+                      {simResult.simulation_result.mock_annual_rate}%
+                    </p>
+                    <p className="text-xs opacity-75 mt-1">
+                      {simRisk} risk profile
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* AI-Generated Course Content */}
+              {simResult.course_content && (
+                <div className="bg-white dark:bg-dark-800 rounded-lg p-6 border-2 border-primary-200 dark:border-primary-800">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl">
+                      🎓
+                    </div>
+                    <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                      AI-Generated Investment Masterclass
+                    </h3>
+                  </div>
+                  <div
+                    className="prose dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: simResult.course_content
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/### (.*?)(\n|$)/g, "<h3>$1</h3>")
+                        .replace(/\n/g, "<br/>"),
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

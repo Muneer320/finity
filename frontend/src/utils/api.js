@@ -120,6 +120,84 @@ export const incomeAPI = {
   },
 };
 
+// Gamification API calls
+export const gamificationAPI = {
+  // Get user's current expense logging streak
+  getStreak: async () => {
+    return apiRequest("/gamification/streak", {
+      method: "GET",
+    });
+  },
+
+  // Get randomized daily check-in prompt
+  getDailyPrompt: async () => {
+    return apiRequest("/gamification/daily-prompt", {
+      method: "GET",
+    });
+  },
+};
+
+// Market/Trading API calls
+export const marketAPI = {
+  // Get user's portfolio holdings with real-time mocked values (Paper Trading)
+  getLiveFeed: async () => {
+    return apiRequest("/market/live-feed", {
+      method: "GET",
+    });
+  },
+
+  // Execute investment action (buy/sell)
+  executeAction: async (actionData) => {
+    return apiRequest("/simulate/invest/action", {
+      method: "POST",
+      body: JSON.stringify(actionData),
+    });
+  },
+
+  // Get historical data for a specific asset symbol
+  getAssetHistory: async (symbol) => {
+    return apiRequest(`/market/asset-history/${symbol}`, {
+      method: "GET",
+    });
+  },
+
+  // Run investment simulation and get AI-generated micro-course
+  simulateInvestment: async (simulationData) => {
+    return apiRequest("/simulate/invest/learn", {
+      method: "POST",
+      body: JSON.stringify(simulationData),
+    });
+  },
+};
+
+// Chat API calls
+export const chatAPI = {
+  // Send a message to the AI chatbot
+  sendMessage: async (message) => {
+    return apiRequest("/chat", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+  },
+};
+
+// Course API calls
+export const courseAPI = {
+  // Get the next lesson for the user
+  getNextLesson: async () => {
+    return apiRequest("/course/next-lesson", {
+      method: "GET",
+    });
+  },
+
+  // Mark current lesson as complete
+  completeLesson: async () => {
+    return apiRequest("/course/complete-lesson", {
+      method: "POST",
+    });
+  },
+};
+
 // Storage helpers
 export const storage = {
   setAuth: (data) => {

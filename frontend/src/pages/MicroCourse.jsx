@@ -13,11 +13,14 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
 } from "../utils/achievementManager";
+import { courseAPI, userAPI } from "../utils/api";
 
 function MicroCourse() {
   const { showAchievement } = useAchievement();
   const [completedLessons, setCompletedLessons] = useState([]);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [nextLesson, setNextLesson] = useState(null);
+  const [loadingLesson, setLoadingLesson] = useState(false);
 
   // Get trading history to personalize courses
   const portfolio = JSON.parse(localStorage.getItem("portfolio") || "[]");
@@ -237,11 +240,19 @@ function MicroCourse() {
     },
   ];
 
-  const handleCompleteLesson = (courseId) => {
+  const handleCompleteLesson = async (courseId) => {
     if (!completedLessons.includes(courseId)) {
       const updated = [...completedLessons, courseId];
       setCompletedLessons(updated);
       localStorage.setItem("completedLessons", JSON.stringify(updated));
+
+      // Call backend API to mark lesson as complete
+      try {
+        await courseAPI.completeLesson();
+        console.log("Lesson marked as complete on backend");
+      } catch (error) {
+        console.error("Error completing lesson:", error);
+      }
 
       // Award achievement for completing first course
       if (updated.length === 1) {
@@ -271,9 +282,25 @@ function MicroCourse() {
     }
   };
 
+  // Fetch next lesson from backend
+  const fetchNextLesson = async () => {
+    setLoadingLesson(true);
+    try {
+      const lesson = await courseAPI.getNextLesson();
+      setNextLesson(lesson);
+    } catch (error) {
+      console.error("Error fetching next lesson:", error);
+    } finally {
+      setLoadingLesson(false);
+    }
+  };
+
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("completedLessons") || "[]");
     setCompletedLessons(saved);
+
+    // Fetch next lesson from backend
+    fetchNextLesson();
   }, []);
 
   return (
@@ -339,6 +366,45 @@ function MicroCourse() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Course List */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Backend Next Lesson Card */}
+            {nextLesson && (
+              <div className="card bg-gradient-to-r from-primary-500 to-purple-600 text-white">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">🎯</div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="text-lg font-display font-semibold mb-1">
+                          Next: {nextLesson.lesson_title}
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
+                            Lesson {nextLesson.lesson_number}
+                          </span>
+                        </h3>
+                        <p className="text-sm text-white/90 mb-3">
+                          {nextLesson.assignment_text}
+                        </p>
+                        <div
+                          className="text-sm prose prose-invert max-w-none"
+                          dangerouslySetInnerHTML={{
+                            __html: nextLesson.lesson_content,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        await courseAPI.completeLesson();
+                        fetchNextLesson();
+                      }}
+                      className="mt-4 px-4 py-2 bg-white text-primary-600 rounded-lg font-medium hover:bg-white/90 transition-colors"
+                    >
+                      Complete Lesson
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {courses.map((course) => (
               <div
                 key={course.id}

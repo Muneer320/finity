@@ -7,6 +7,7 @@ import {
   TrendingUp,
   TrendingDown,
   Filter,
+  Sparkles,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAchievement } from "../context/AchievementContext";
@@ -14,7 +15,7 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
 } from "../utils/achievementManager";
-import { expenseAPI, incomeAPI } from "../utils/api";
+import { expenseAPI, incomeAPI, gamificationAPI } from "../utils/api";
 
 function Expenses() {
   const { showAchievement } = useAchievement();
@@ -23,6 +24,8 @@ function Expenses() {
   const [filterType, setFilterType] = useState("all"); // all, income, expense
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dailyPrompt, setDailyPrompt] = useState(null);
+  const [promptLoading, setPromptLoading] = useState(true);
   const [formData, setFormData] = useState({
     type: "expense",
     amount: "",
@@ -54,6 +57,20 @@ function Expenses() {
     // Load transactions from localStorage
     const saved = JSON.parse(localStorage.getItem("transactions") || "[]");
     setTransactions(saved);
+
+    // Fetch daily prompt
+    const fetchDailyPrompt = async () => {
+      try {
+        const response = await gamificationAPI.getDailyPrompt();
+        setDailyPrompt(response);
+      } catch (err) {
+        console.error("Failed to fetch daily prompt:", err);
+      } finally {
+        setPromptLoading(false);
+      }
+    };
+
+    fetchDailyPrompt();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -162,6 +179,7 @@ function Expenses() {
               Track your income and expenses
             </p>
           </div>
+
           <button
             onClick={() => setShowAddModal(true)}
             className="btn-primary flex items-center gap-2"
@@ -170,6 +188,33 @@ function Expenses() {
             Add Transaction
           </button>
         </div>
+
+        {/* Daily Prompt Card */}
+        {!promptLoading && dailyPrompt && (
+          <div className="mb-6 card bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-primary-500/10 border-2 border-purple-500/30">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-purple-500/20 rounded-lg flex-shrink-0">
+                <Sparkles className="w-6 h-6 text-purple-500" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                    {dailyPrompt.type || "Daily Challenge"}
+                  </span>
+                </div>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {dailyPrompt.text}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="btn-primary text-sm whitespace-nowrap"
+              >
+                Log Now
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
