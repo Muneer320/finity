@@ -12,27 +12,44 @@ import {
   X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useUserProfile } from "../hooks/useUserProfile";
 
 function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState(null);
   const [editedData, setEditedData] = useState(null);
   const [achievements, setAchievements] = useState([]);
+  const { profile, loading, refreshProfile } = useUserProfile();
 
   useEffect(() => {
-    const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
+    // Use profile from backend if available, otherwise fallback to localStorage
+    if (profile) {
+      setUserData(profile);
+      setEditedData(profile);
+    } else {
+      const cached = JSON.parse(localStorage.getItem("userProfile") || "{}");
+      setUserData(cached);
+      setEditedData(cached);
+    }
+
     const userAchievements = JSON.parse(
       localStorage.getItem("achievements") || "[]"
     );
-    setUserData(profile);
-    setEditedData(profile);
     setAchievements(userAchievements);
-  }, []);
+  }, [profile]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // TODO: Save to backend API when update endpoint is available
     localStorage.setItem("userProfile", JSON.stringify(editedData));
     setUserData(editedData);
     setIsEditing(false);
+
+    // Refresh profile from backend
+    try {
+      await refreshProfile();
+    } catch (err) {
+      console.error("Failed to refresh profile:", err);
+    }
   };
 
   const handleCancel = () => {
@@ -40,15 +57,37 @@ function Profile() {
     setIsEditing(false);
   };
 
+  if (loading && !userData) {
+    return (
+      <Layout>
+        <div className="p-8 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading your profile...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!userData) return null;
+
+  // Format currency
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  };
 
   const stats = [
     { label: "Age", value: userData.age, icon: User },
     { label: "Occupation", value: userData.occupation, icon: Briefcase },
-    { label: "Monthly Income", value: userData.income, icon: DollarSign },
+    { label: "Email", value: userData.email, icon: Mail },
     {
       label: "Risk Tolerance",
-      value: userData.riskTolerance,
+      value: userData.risk_tolerance || userData.riskTolerance,
       icon: TrendingUp,
     },
   ];
@@ -170,27 +209,35 @@ function Profile() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Monthly Income
+                  </label>
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(userData.monthly_income)}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                     Monthly Expenses
                   </label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={editedData.monthlyExpenses}
-                      onChange={(e) =>
-                        setEditedData({
-                          ...editedData,
-                          monthlyExpenses: e.target.value,
-                        })
-                      }
-                      className="input-field"
-                    />
-                  ) : (
-                    <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
-                      <span className="font-mono font-medium text-gray-900 dark:text-white">
-                        ₹{userData.monthlyExpenses}
-                      </span>
-                    </div>
-                  )}
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(userData.monthly_expenses)}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Fixed Budget (Income - Expenses)
+                  </label>
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(userData.fixed_budget)}
+                    </span>
+                  </div>
                 </div>
 
                 <div>
@@ -198,21 +245,8 @@ function Profile() {
                     Current Savings
                   </label>
                   <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
-                    <span className="font-medium text-gray-900 dark:text-white capitalize">
-                      {userData.savings}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                    Loans
-                  </label>
-                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
-                    <span className="font-medium text-gray-900 dark:text-white capitalize">
-                      {userData.loans === "yes"
-                        ? `Yes - ₹${userData.loanAmount}`
-                        : "No active loans"}
+                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(userData.current_savings)}
                     </span>
                   </div>
                 </div>
@@ -222,9 +256,56 @@ function Profile() {
                     Current Investments
                   </label>
                   <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
-                    <span className="font-medium text-gray-900 dark:text-white capitalize">
-                      {userData.investments}
+                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(userData.current_investment)}
                     </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Total Loan Amount
+                  </label>
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-mono font-medium text-gray-900 dark:text-white">
+                      {userData.loan_amount > 0
+                        ? formatCurrency(userData.loan_amount)
+                        : "No active loans"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Investment Experience Level
+                  </label>
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <span className="font-medium text-gray-900 dark:text-white capitalize">
+                      {userData.experience_level}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Financial Confidence (1-10)
+                  </label>
+                  <div className="p-4 bg-gray-100 dark:bg-dark-800 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-dark-700 rounded-full h-2">
+                        <div
+                          className="bg-primary-500 h-2 rounded-full transition-all"
+                          style={{
+                            width: `${
+                              (userData.financial_confidence / 10) * 100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <span className="font-medium text-primary-500">
+                        {userData.financial_confidence}/10
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

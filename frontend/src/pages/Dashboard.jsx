@@ -15,14 +15,21 @@ import {
   ACHIEVEMENT_TYPES,
   recordLogin,
 } from "../utils/achievementManager";
+import { useUserProfile } from "../hooks/useUserProfile";
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
   const { showAchievement } = useAchievement();
+  const { profile, loading: profileLoading, refreshProfile } = useUserProfile();
 
   useEffect(() => {
-    const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
-    setUserData(profile);
+    // Use profile from backend if available, otherwise fallback to localStorage
+    if (profile) {
+      setUserData(profile);
+    } else {
+      const cached = JSON.parse(localStorage.getItem("userProfile") || "{}");
+      setUserData(cached);
+    }
 
     // Record login for streak tracking
     recordLogin();
@@ -42,36 +49,48 @@ function Dashboard() {
         showAchievement(firstAchievement);
       }
     }
-  }, [showAchievement]);
+  }, [showAchievement, profile]);
+
+  // Format currency
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value || 0);
+  };
 
   const stats = [
     {
-      name: "Portfolio Value",
-      value: "₹1,00,000",
-      change: "+0%",
+      name: "Monthly Income",
+      value: formatCurrency(userData?.monthly_income),
+      change: `Budget: ${formatCurrency(userData?.fixed_budget)}`,
       icon: Wallet,
       positive: true,
     },
     {
-      name: "Active Investments",
-      value: "0",
-      change: "Mock Trading",
+      name: "Current Investments",
+      value: formatCurrency(userData?.current_investment),
+      change: `${userData?.experience_level || "Beginner"} Level`,
       icon: TrendingUp,
       positive: true,
     },
     {
       name: "Learning Progress",
-      value: "15%",
+      value: `${userData?.lesson_progress || 0}%`,
       change: "Keep going!",
       icon: Target,
       positive: true,
     },
     {
-      name: "Savings Goal",
-      value: "₹0",
-      change: "Set a goal",
+      name: "Current Savings",
+      value: formatCurrency(userData?.current_savings),
+      change:
+        userData?.loan_amount > 0
+          ? `Loan: ${formatCurrency(userData.loan_amount)}`
+          : "No loans",
       icon: PiggyBank,
-      positive: false,
+      positive: userData?.loan_amount === 0,
     },
   ];
 
@@ -92,13 +111,27 @@ function Dashboard() {
     },
   ];
 
+  if (profileLoading && !userData) {
+    return (
+      <Layout>
+        <div className="p-8 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading your profile...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-2">
-            Welcome back! 👋
+            Welcome back
+            {userData?.email ? `, ${userData.email.split("@")[0]}` : ""}! 👋
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Here's an overview of your financial journey

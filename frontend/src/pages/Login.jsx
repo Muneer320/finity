@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL, userAPI } from "../utils/api";
 
 function Login({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -44,14 +44,25 @@ function Login({ setIsAuthenticated }) {
 
       setIsAuthenticated(true);
 
-      // Check if questionnaire is completed
-      const questionnaireCompleted = localStorage.getItem(
-        "questionnaireCompleted"
-      );
-      if (!questionnaireCompleted) {
-        navigate("/questionnaire");
-      } else {
-        navigate("/dashboard");
+      // Fetch user profile to check if onboarding is complete
+      try {
+        const profile = await userAPI.getProfile();
+        // Check if user has completed onboarding (age will be set after onboarding)
+        if (!profile.age) {
+          navigate("/questionnaire");
+        } else {
+          navigate("/dashboard");
+        }
+      } catch (profileErr) {
+        // If profile fetch fails, fall back to localStorage check
+        const questionnaireCompleted = localStorage.getItem(
+          "questionnaireCompleted"
+        );
+        if (!questionnaireCompleted) {
+          navigate("/questionnaire");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (err) {
       setError(err.message || "An error occurred during login.");
