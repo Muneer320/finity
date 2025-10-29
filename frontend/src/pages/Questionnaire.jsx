@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
+import { userAPI } from "../utils/api";
 
 function Questionnaire({ setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     age: "",
     occupation: "",
@@ -18,6 +20,8 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
     financialGoals: [],
     riskTolerance: "",
     experience: "",
+    financialConfidence: 5, // Default value 1-10
+    fixedBudget: "", // Will be calculated or set
   });
 
   const totalSteps = 4;
@@ -81,12 +85,45 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
     }
   };
 
-  const handleSubmit = () => {
-    // TODO: Send to API
-    localStorage.setItem("questionnaireCompleted", "true");
-    localStorage.setItem("userProfile", JSON.stringify(formData));
-    setHasCompletedQuestionnaire(true);
-    navigate("/dashboard");
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      // Prepare data for backend API
+      const onboardingData = {
+        age: parseInt(formData.age),
+        occupation: formData.occupation,
+        monthly_income: parseFloat(formData.income),
+        monthly_expenses: parseFloat(formData.monthlyExpenses),
+        current_savings: parseFloat(formData.savings),
+        loan_amount:
+          formData.loans === "yes" ? parseFloat(formData.loanAmount) : 0,
+        current_investment: parseFloat(formData.investments),
+        experience_level: formData.experience,
+        risk_tolerance: formData.riskTolerance,
+        financial_confidence: formData.financialConfidence,
+        fixed_budget:
+          parseFloat(formData.income) - parseFloat(formData.monthlyExpenses), // Calculate fixed budget
+        goals_data: formData.financialGoals, // Send as simple array of strings
+      };
+
+      console.log('Submitting onboarding data:', onboardingData);
+
+      // Submit to backend
+      const response = await userAPI.onboard(onboardingData);
+
+      // Store locally for offline access
+      localStorage.setItem("questionnaireCompleted", "true");
+      localStorage.setItem("userProfile", JSON.stringify(response));
+
+      setHasCompletedQuestionnaire(true);
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Onboarding error:", err);
+      setError(err.message || "Failed to save your profile. Please try again.");
+      setLoading(false);
+    }
   };
 
   const toggleGoal = (goal) => {
@@ -456,42 +493,77 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
             {step === 4 && (
               <div className="space-y-6">
                 <h2 className="text-xl font-display font-semibold">
-                  Financial Goals
+                  Financial Goals & Confidence
                 </h2>
-                <p className="text-gray-400">
-                  Select all that apply <span className="text-red-500">*</span>
-                  <span className="text-xs ml-2">(At least one required)</span>
-                </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {[
-                    "Build Emergency Fund",
-                    "Save for Retirement",
-                    "Buy a Home",
-                    "Pay Off Debt",
-                    "Start Investing",
-                    "Grow Wealth",
-                    "Financial Independence",
-                    "Education Fund",
-                  ].map((goal) => (
-                    <button
-                      key={goal}
-                      type="button"
-                      className={`p-4 rounded-lg border-2 text-left transition-all ${
-                        formData.financialGoals.includes(goal)
-                          ? "border-primary-600 bg-primary-600/10"
-                          : "border-dark-700 hover:border-dark-600"
-                      }`}
-                      onClick={() => toggleGoal(goal)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{goal}</span>
-                        {formData.financialGoals.includes(goal) && (
-                          <CheckCircle className="w-5 h-5 text-primary-500" />
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                <div>
+                  <p className="text-gray-400 mb-3">
+                    Select all that apply{" "}
+                    <span className="text-red-500">*</span>
+                    <span className="text-xs ml-2">
+                      (At least one required)
+                    </span>
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      "Build Emergency Fund",
+                      "Save for Retirement",
+                      "Buy a Home",
+                      "Pay Off Debt",
+                      "Start Investing",
+                      "Grow Wealth",
+                      "Financial Independence",
+                      "Education Fund",
+                    ].map((goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${
+                          formData.financialGoals.includes(goal)
+                            ? "border-primary-600 bg-primary-600/10"
+                            : "border-dark-700 hover:border-dark-600"
+                        }`}
+                        onClick={() => toggleGoal(goal)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{goal}</span>
+                          {formData.financialGoals.includes(goal) && (
+                            <CheckCircle className="w-5 h-5 text-primary-500" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Financial Confidence Level
+                    <span className="text-xs text-gray-400 ml-2">
+                      (1-10, where 10 is most confident)
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    className="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                    value={formData.financialConfidence}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        financialConfidence: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>Not Confident</span>
+                    <span className="text-primary-500 font-medium text-base">
+                      {formData.financialConfidence}
+                    </span>
+                    <span>Very Confident</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -501,9 +573,10 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
               <button
                 type="button"
                 onClick={handleBack}
+                disabled={loading}
                 className={`btn-secondary flex items-center gap-2 ${
                   step === 1 ? "invisible" : ""
-                }`}
+                } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back
@@ -512,10 +585,22 @@ function Questionnaire({ setHasCompletedQuestionnaire }) {
               <button
                 type="button"
                 onClick={handleNext}
-                className="btn-primary flex items-center gap-2"
+                disabled={loading}
+                className={`btn-primary flex items-center gap-2 ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                {step === totalSteps ? "Complete" : "Next"}
-                <ArrowRight className="w-5 h-5" />
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    {step === totalSteps ? "Complete" : "Next"}
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -24,6 +24,17 @@ export const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      // Handle validation errors (422)
+      if (response.status === 422 && data.detail) {
+        // Format validation error details
+        if (Array.isArray(data.detail)) {
+          const errors = data.detail.map(err => 
+            `${err.loc.join(' -> ')}: ${err.msg}`
+          ).join(', ');
+          throw new Error(`Validation Error: ${errors}`);
+        }
+        throw new Error(JSON.stringify(data.detail));
+      }
       throw new Error(data.detail || `API Error: ${response.status}`);
     }
 
@@ -47,6 +58,24 @@ export const authAPI = {
     return apiRequest("/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    });
+  },
+};
+
+// User Profile API calls
+export const userAPI = {
+  // Get current user profile
+  getProfile: async () => {
+    return apiRequest("/users/me", {
+      method: "GET",
+    });
+  },
+
+  // Submit onboarding data
+  onboard: async (onboardingData) => {
+    return apiRequest("/onboard", {
+      method: "POST",
+      body: JSON.stringify(onboardingData),
     });
   },
 };
