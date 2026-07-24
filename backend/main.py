@@ -1,32 +1,31 @@
 # main.py
 
 from fastapi import FastAPI, Depends, HTTPException, status
+from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
-from typing import Dict
+import json
 import random
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+load_dotenv()
 
 # Database, Security, and Schema Imports
 from database.database import create_db_and_tables, get_db
 from database import crud, schemas
 from auth.auth_service import create_access_token, verify_password, get_current_user_email
 from auth.auth_service import ACCESS_TOKEN_EXPIRE_MINUTES
-from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, generate_financial_summary, get_chat_response, execute_investment_simulation, get_mock_asset_history, generate_next_lesson
+from ai.coach_agent import generate_investment_micro_course, run_mock_simulation, get_chat_response, get_mock_asset_history, generate_next_lesson, ASSET_CATALOG
 
-origins = [
-    "http://localhost:3000",       # Local Frontend Development URL
-    "http://127.0.0.1:3000",       # Alternative local URL
-    "http://localhost:5173",       # Vite dev server
-    "https://finityy.vercel.app",  # Production frontend URL
-    "https://finity.onrender.com", # Backend's own domain
-]
+origins = [value.strip() for value in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if value.strip()]
 # --- APP INITIALIZATION ---
-load_dotenv()
-app = FastAPI(title="Finity: The Frugal Friend Backend")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+app = FastAPI(title="Finity paper trading demo", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,8 +35,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# NOTE: Tables must be created. Assuming this was done successfully with the Supabase connection.
-# create_db_and_tables() 
 
 # --- TEST/DEBUG ROUTES ---
 @app.get("/", tags=["Debug"])
@@ -46,7 +43,7 @@ def root():
     return {
         "status": "running",
         "cors_origins": origins,
-        "message": "Finity Backend API - CORS Fixed v2"
+        "message": "Finity local paper trading API"
     }
 
 # --- 1. AUTHENTICATION ROUTES (Amogh & Muneer's Focus) ---
@@ -108,6 +105,29 @@ def read_users_me(
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
+@app.patch("/users/me", response_model=schemas.User, tags=["Users"])
+def update_users_me(data: schemas.ProfileUpdate, db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, current_user_email)
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    if data.age is not None and not 13 <= data.age <= 120:
+        raise HTTPException(status_code=400, detail="Age must be between 13 and 120")
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
+    db.commit()
+    db.refresh(user)
+    return user
+
+@app.post("/achievements", tags=["Users"])
+def save_achievement(data: schemas.AchievementCreate, db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, current_user_email)
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    achievements = json.loads(user.achievements or "[]")
+    if not any(item.get("name") == data.name for item in achievements):
+        achievements.append(data.model_dump())
+        user.achievements = json.dumps(achievements)
+        db.commit()
+    return {"achievements": achievements}
+
 # --- 2. ONBOARDING & DATA ROUTES (Mallika Focus) ---
 
 @app.post("/onboard", response_model=schemas.User, tags=["Data"])
@@ -134,6 +154,20 @@ def create_expense(
     
     # MODIFICATION: Pass the expense object directly (Pydantic handles the Optional field)
     return crud.create_expense(db=db, expense=expense, user_id=user.id)
+
+@app.get("/expenses", response_model=list[schemas.Expense], tags=["Data"])
+def list_expenses(db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, current_user_email)
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    return crud.get_user_expenses(db, user.id)
+
+@app.delete("/expenses/{entry_id}", status_code=204, tags=["Data"])
+def delete_expense(entry_id: int, db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, current_user_email)
+    entry = db.query(crud.models.Expense).filter_by(id=entry_id, owner_id=user.id).first()
+    if not entry: raise HTTPException(status_code=404, detail="Expense not found")
+    db.delete(entry)
+    db.commit()
 
 # --- 3. AI & SUMMARY ROUTES (Core Innovation) ---
 # main.py (Add to Section 3: AI & SUMMARY ROUTES)
@@ -195,6 +229,9 @@ def get_mock_market_feed(
     # 4. Return the dynamic summary
     return {
         "total_portfolio_value": round(total_market_value, 2),
+        "available_balance": round(user.cash_balance, 2),
+        "available_stocks": [asset for asset in ASSET_CATALOG if asset["type"] == "Stock"],
+        "available_mutual_funds": [asset for asset in ASSET_CATALOG if asset["type"] == "Mutual Fund"],
         "holdings": portfolio_summary,
         "last_update": datetime.now().isoformat()
     }
@@ -227,13 +264,7 @@ def handle_chat(
     db: Session = Depends(get_db), 
     current_user_email: str = Depends(get_current_user_email)
 ):
-    # Dummy chat history for MVP (Muneer needs to send the real history)
-    chat_history = [
-        {"role": "user", "message": "What is compound interest?"},
-        {"role": "model", "message": "It's money earning money!"}
-    ]
-    
-    response_text = get_chat_response(chat_message.message, chat_history)
+    response_text = get_chat_response(chat_message.message, chat_message.history[-12:])
     return {"reply": response_text}
 
 @app.post("/simulate/invest/action", tags=["AI"])
@@ -245,27 +276,8 @@ def simulate_investment_action(
     user = crud.get_user_by_email(db, email=current_user_email)
     if not user: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
-    transaction_status = execute_investment_simulation(user.id, action_data.model_dump())
-    
-    # 1. CRITICAL: If successful, attempt the database transaction
-    if transaction_status.get('status') == 'success':
-        try:
-            # If the commit succeeds, the code continues.
-            crud.update_portfolio_shares(
-                db, 
-                user_id=user.id, 
-                symbol=action_data.symbol, 
-                amount=action_data.amount, 
-                action=action_data.action
-            )
-        except HTTPException as e:
-            # CATCH: If CRUD raises an HTTPException (e.g., "Cannot sell more shares"), 
-            # we re-raise it here. FastAPI will automatically return the correct 400 status.
-            raise e # Re-raise the exception to send the 400/500 status back to the client
-
-    # If the AI failed (status != success), or if the DB update succeeded, 
-    # we return the transaction_status.
-    return transaction_status
+    result = crud.update_portfolio_shares(db, user.id, action_data.symbol, action_data.amount, action_data.action)
+    return {"status": "success", "message": f"Paper {action_data.action.lower()} completed for {action_data.amount:g} shares of {action_data.symbol.upper()}.", **result}
 
 @app.post("/simulate/invest/learn", tags=["AI"])
 def simulate_investment(
@@ -333,34 +345,6 @@ def get_asset_history(
         
     return {"symbol": symbol, "history": history}
 
-# database/crud.py (Add to the end of the file)
-
-from datetime import date, timedelta
-from typing import Optional
-
-def calculate_consecutive_days_logged(db: Session, user_id: int) -> int:
-    """Calculates the user's current consecutive logging streak."""
-    
-    today = date.today()
-    streak = 0
-    
-    # Query all unique dates the user has logged an expense, ordered descending
-    logged_dates = db.query(models.Expense.date.cast(date)).filter(
-        models.Expense.owner_id == user_id
-    ).distinct().order_by(models.Expense.date.desc()).all()
-    
-    logged_dates = {d[0] for d in logged_dates} # Convert to set of dates for fast lookup
-    
-    # Check if the user logged today (or yesterday, depending on the current time)
-    current_day = today
-    
-    # Loop backward to calculate the streak
-    while current_day in logged_dates:
-        streak += 1
-        current_day -= timedelta(days=1)
-        
-    return streak
-
 @app.get("/course/next-lesson", response_model=schemas.LessonContent, tags=["AI"])
 def get_next_lesson_route(db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
     user = crud.get_user_by_email(db, email=current_user_email)
@@ -381,12 +365,11 @@ def complete_lesson(db: Session = Depends(get_db), current_user_email: str = Dep
     user = crud.get_user_by_email(db, email=current_user_email)
     if not user: raise HTTPException(status_code=404, detail="User not found")
     
-    # Check if the current assignment is met before advancing
     current_lesson_index = user.lesson_progress + 1
-    # NOTE: You'd need to fetch the criteria key here first, but for MVP simplicity:
-    # We assume the check function determines criteria based on user data
-    
-    if check_assignment_status(db, user.id, 'consecutive_logs_3'): # Simplified check
+    if current_lesson_index > 3:
+        raise HTTPException(status_code=400, detail="All demo lessons completed")
+    lesson = generate_next_lesson({"fixed_budget": user.fixed_budget, "financial_confidence": user.financial_confidence}, current_lesson_index)
+    if check_assignment_status(db, user.id, lesson['unlock_criteria_key']):
         return crud.advance_user_lesson_progress(db, user.id)
     else:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Assignment not complete. Keep tracking your expenses!")
@@ -414,10 +397,23 @@ def create_income(
     
     return crud.create_income(db=db, income=income, user_id=user.id)
 
+@app.get("/incomes", response_model=list[schemas.Income], tags=["Data"])
+def list_incomes(db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, current_user_email)
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    return crud.get_user_incomes(db, user.id, limit=100)
+
+@app.delete("/incomes/{entry_id}", status_code=204, tags=["Data"])
+def delete_income(entry_id: int, db: Session = Depends(get_db), current_user_email: str = Depends(get_current_user_email)):
+    user = crud.get_user_by_email(db, current_user_email)
+    entry = db.query(crud.models.Income).filter_by(id=entry_id, owner_id=user.id).first()
+    if not entry: raise HTTPException(status_code=404, detail="Income not found")
+    db.delete(entry)
+    db.commit()
+
 # --- 4. RUN SERVER (Development Only) ---
 if __name__ == "__main__":
     import uvicorn
     # This command starts the server
-    create_db_and_tables()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 

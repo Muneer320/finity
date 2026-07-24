@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
 import { API_BASE_URL } from "../utils/api";
 
-function Signup() {
+function Signup({ setIsAuthenticated, setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -52,6 +52,9 @@ function Signup() {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("user_email", data.user_email);
+      localStorage.removeItem("questionnaireCompleted");
+      setIsAuthenticated(true);
+      setHasCompletedQuestionnaire(false);
 
       // Redirect to questionnaire
       navigate("/questionnaire");

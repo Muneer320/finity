@@ -1,4 +1,7 @@
 // Achievement Manager - Centralized system for tracking and awarding achievements
+import { apiRequest } from "./api";
+
+export const achievementsKey = () => `achievements:${localStorage.getItem("user_id") || "anonymous"}`;
 
 export const ACHIEVEMENT_TYPES = {
   GETTING_STARTED: "Getting Started",
@@ -15,7 +18,7 @@ export const ACHIEVEMENT_TYPES = {
 
 // Check if an achievement has already been earned
 export const hasAchievement = (achievementName) => {
-  const achievements = JSON.parse(localStorage.getItem("achievements") || "[]");
+  const achievements = JSON.parse(localStorage.getItem(achievementsKey()) || "[]");
   return achievements.some((a) => a.name === achievementName);
 };
 
@@ -25,21 +28,22 @@ export const awardAchievement = (achievement) => {
     return false; // Already has this achievement
   }
 
-  const achievements = JSON.parse(localStorage.getItem("achievements") || "[]");
+  const achievements = JSON.parse(localStorage.getItem(achievementsKey()) || "[]");
   const newAchievement = {
     ...achievement,
     date: new Date().toISOString(),
   };
 
   achievements.push(newAchievement);
-  localStorage.setItem("achievements", JSON.stringify(achievements));
+  localStorage.setItem(achievementsKey(), JSON.stringify(achievements));
+  apiRequest("/achievements", { method: "POST", body: JSON.stringify(newAchievement) }).catch((error) => console.error("Achievement sync failed", error));
 
   return true; // Achievement awarded
 };
 
 // Get all achievements
 export const getAchievements = () => {
-  return JSON.parse(localStorage.getItem("achievements") || "[]");
+  return JSON.parse(localStorage.getItem(achievementsKey()) || "[]");
 };
 
 // Check and award Diamond Hands achievement

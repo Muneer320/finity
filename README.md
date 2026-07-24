@@ -1,137 +1,38 @@
 # Finity
 
-**AI-powered fintech gamification platform — paper trading, financial coach, micro-courses, and expense tracking.**
+Finity is a local financial literacy prototype from a 2025 hackathon. It combines a fictional ₹ paper market, expense and income records, an investment projection, short lessons, and a learning assistant. **Prices and returns are invented for practice. No real orders are placed, no market feed is connected, and projections are not forecasts.**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react" alt="React">
-  <img src="https://img.shields.io/badge/FastAPI-0.95-009688?style=for-the-badge&logo=fastapi" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite" alt="Vite">
-  <img src="https://img.shields.io/badge/Framer%20Motion-enabled-black?style=for-the-badge&logo=framer" alt="Framer Motion">
-  <img src="https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=for-the-badge&logo=python" alt="SQLAlchemy">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT">
-</p>
+## Run the demo
 
----
-
-## What It Does
-
-Finity makes financial literacy accessible by combining four modes of learning: a paper trading simulator where users practice with virtual currency, an AI financial coach that gives personalized advice, micro-courses that adapt to the user's knowledge level, and expense tracking with visual analytics. Built for a financial inclusion hackathon.
-
----
-
-## Features
-
-### 💹 Paper Trading Simulator
-
-| Feature | Detail |
-|---------|--------|
-| Virtual portfolio | Start with ₹1,00,000 in F-Coins |
-| Assets | Stocks & mutual funds with simulated price movements |
-| Trading | Buy/sell with backend-persisted portfolio |
-| Analytics | Real-time gain/loss, asset history charts, diversification view |
-
-### 🤖 AI Financial Coach
-
-| Feature | Detail |
-|---------|--------|
-| Personalization | Context-aware responses based on profile, goals, risk tolerance |
-| History | Maintains conversation context across sessions |
-| Integration | Achievement badges for first interactions |
-
-### 🎓 Micro-Learning Courses
-
-| Feature | Detail |
-|---------|--------|
-| Adaptive curriculum | AI-driven course recommendations based on user activity |
-| Tracking | Progress per lesson, total learning time |
-| Gamification | Badges for learning milestones |
-
-### 🎮 Gamification
-
-| Feature | Detail |
-|---------|--------|
-| Streaks | Daily logging streaks with fire emoji display |
-| Badges | First Trade, Diamond Hands, learning milestones |
-| Daily prompts | Randomized check-in messages for engagement |
-
-### 📊 Expense & Income Tracking
-
-| Feature | Detail |
-|---------|--------|
-| Logging | Categorized transactions with amounts |
-| Analytics | Category breakdowns, daily trends, monthly patterns, 90-day heatmap |
-| Metrics | Savings rate and financial health indicators |
-
----
-
-## Architecture
-
-```
-finity/
-├── frontend/                    # React 18.3 + Vite 5.4
-│   ├── src/
-│   │   ├── pages/               # 10 pages (Dashboard, Trading, ChatBot, MicroCourse, 
-│   │   │                        # Analytics, Expenses, Profile, Questionnaire, Login, Signup)
-│   │   ├── components/          # Shared UI (Layout, AchievementNotification, etc.)
-│   │   ├── context/             # AchievementContext, ThemeContext
-│   │   └── utils/               # API client, achievementManager
-│   └── vite.config.js           # API proxy config
-│
-├── backend/                     # FastAPI + SQLAlchemy
-│   ├── api/                     # Route handlers
-│   ├── db/                      # database.py, crud.py
-│   ├── models/                  # Pydantic schemas
-│   └── main.py                  # App entry point
-│
-└── README.md
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 18.3, Vite 5.4, Tailwind CSS, Framer Motion, React Router, Lucide React |
-| **Backend** | FastAPI, SQLAlchemy 2.0, JWT Auth, Pydantic |
-| **AI** | OpenAI / Google Gemini integration for coach + course generation |
-| **Database** | PostgreSQL via SQLAlchemy |
-| **Deployment** | Vercel (frontend), Render (backend) |
-
----
-
-## API Endpoints
-
-| Module | Endpoints | Purpose |
-|--------|-----------|---------|
-| Auth | 2 | Signup, login |
-| User | 2 | Profile, onboarding |
-| Transactions | 2 | Log expense, log income |
-| Gamification | 2 | Streak check, daily prompt |
-| Trading | 5 | Live feed, buy/sell, asset history, simulate, learn |
-| AI | 1 | Chat with financial coach |
-| Learning | 2 | Get next lesson, complete lesson |
-
----
-
-## Quick Start
+With Docker installed, run:
 
 ```bash
-git clone https://github.com/Muneer320/finity.git
-
-# Frontend
-cd frontend && npm install && npm run dev
-
-# Backend
-cd backend && python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
+docker compose up --build
 ```
 
-Backend docs at `http://localhost:8000/docs`.
+Open `http://localhost:3000`, create an account, and complete the questionnaire. The backend serves `http://localhost:8000/docs`. SQLite data persists in the `finity_data` Docker volume. Stop with `docker compose down`. For sessions that should survive a restart, set a strong `SECRET_KEY` in a root `.env` first.
 
----
+For native development, use Python 3.13 and Node.js 22:
 
-## License
+```bash
+python -m venv .venv
+# Activate .venv for your shell
+pip install -r backend/requirements.txt
+cd backend
+uvicorn main:app --reload --port 8000
+```
 
-MIT © Muneer Alam & Amogh
+In another terminal, run `cd frontend`, `npm ci`, and `npm run dev`. The frontend's Vite proxy targets `http://127.0.0.1:8000`; `VITE_PROXY_TARGET` can change that target. For a separately deployed frontend, set `VITE_API_BASE_URL` to the backend's public base URL. Backend `DATABASE_URL` defaults to a local SQLite file; see `backend/.env.example` for the other settings. Set `ALLOWED_ORIGINS` for the actual frontend origins. A `GEMINI_API_KEY` is optional: it enables open-ended assistant and course text. Paper trading, expense records, projections, and built-in educational answers work without it.
+
+## What works
+
+- New accounts start with ₹100,000 of server-stored paper cash. The eight fictional assets have fixed prices; buy and sell operations update holdings and cash in one database transaction. The API rejects unknown symbols, overspending, and overselling. Data is scoped to the signed-in user.
+- Expenses, income, age and occupation, and earned achievements are saved in the backend. Analytics reads the saved transaction history. The assistant receives the current conversation history in each request, but does not save conversations between sessions.
+- The investment projection uses hypothetical growth assumptions. Three backend lessons describe budgeting and compounding; six additional frontend lesson cards are static educational content. Some badges and trading counters still use browser state, so they are illustrative rather than authoritative progress records.
+- `backend/tests/test_demo.py` exercises signup, trading limits, account isolation, expense records, streaks, profile edits, achievements and assistant fallback. GitHub CI runs that test and builds the frontend.
+
+## Limits and deployment
+
+This is a single-process local demo. SQLite is the default, with `DATABASE_URL` available for a hosted database. Existing deployments were unavailable when this repo was repaired, so this README does not claim a working public site. Chat with no Gemini key uses built-in explanations; Gemini output has not been independently verified as financial guidance. User interface text should be read as education, not an instruction to invest or spend.
+
+The original hackathon work was collaborative: Amogh worked on the backend; Muneer worked on the frontend. This maintenance pass repaired the local demo and made its claims match the code. See `LICENSE` for the MIT license.

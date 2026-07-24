@@ -15,7 +15,7 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
 } from "../utils/achievementManager";
-import { expenseAPI, incomeAPI, gamificationAPI } from "../utils/api";
+import { expenseAPI, incomeAPI, gamificationAPI, loadTransactions } from "../utils/api";
 
 function Expenses() {
   const { showAchievement } = useAchievement();
@@ -54,9 +54,7 @@ function Expenses() {
   ];
 
   useEffect(() => {
-    // Load transactions from localStorage
-    const saved = JSON.parse(localStorage.getItem("transactions") || "[]");
-    setTransactions(saved);
+    loadTransactions().then(setTransactions).catch((err) => setError(err.message));
 
     // Fetch daily prompt
     const fetchDailyPrompt = async () => {
@@ -87,14 +85,14 @@ function Expenses() {
           amount: parseFloat(formData.amount),
           category: formData.category,
           note: formData.description,
-          date: null, // Backend expects null, will auto-generate timestamp
+          date: formData.date,
         });
       } else {
         // Create income via API
         response = await incomeAPI.create({
           amount: parseFloat(formData.amount),
           source: formData.category,
-          date: null, // Backend expects null, will auto-generate timestamp
+          date: formData.date,
         });
       }
 
@@ -116,7 +114,6 @@ function Expenses() {
 
       const updated = [newTransaction, ...transactions];
       setTransactions(updated);
-      localStorage.setItem("transactions", JSON.stringify(updated));
 
       // Award achievement for first transaction
       const moneyManagerAchievement = {
@@ -145,10 +142,13 @@ function Expenses() {
     }
   };
 
-  const handleDelete = (id) => {
-    const updated = transactions.filter((t) => t.id !== id);
-    setTransactions(updated);
-    localStorage.setItem("transactions", JSON.stringify(updated));
+  const handleDelete = async (id, type) => {
+    try {
+      await (type === "expense" ? expenseAPI.remove(id) : incomeAPI.remove(id));
+      setTransactions((current) => current.filter((item) => !(item.id === id && item.type === type)));
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const filteredTransactions = transactions.filter((t) => {
@@ -368,7 +368,7 @@ function Expenses() {
                       {transaction.amount.toLocaleString()}
                     </p>
                     <button
-                      onClick={() => handleDelete(transaction.id)}
+                      onClick={() => handleDelete(transaction.id, transaction.type)}
                       className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-all"
                     >
                       <Trash2 className="w-5 h-5" />

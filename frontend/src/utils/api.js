@@ -1,10 +1,7 @@
 // API Configuration and utility functions
 
 // Use proxy in development, direct URL in production
-export const API_BASE_URL =
-  import.meta.env.MODE === "development"
-    ? "/api"
-    : "https://finity-kb8q.onrender.com";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 // Helper function for API requests
 export const apiRequest = async (endpoint, options = {}) => {
@@ -88,6 +85,7 @@ export const userAPI = {
       method: "GET",
     });
   },
+  updateProfile: (data) => apiRequest("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
 
   // Submit onboarding data
   onboard: async (onboardingData) => {
@@ -100,6 +98,8 @@ export const userAPI = {
 
 // Expense API calls
 export const expenseAPI = {
+  list: () => apiRequest("/expenses"),
+  remove: (id) => apiRequest(`/expenses/${id}`, { method: "DELETE" }),
   // Create a new expense
   create: async (expenseData) => {
     return apiRequest("/expenses", {
@@ -111,6 +111,8 @@ export const expenseAPI = {
 
 // Income API calls
 export const incomeAPI = {
+  list: () => apiRequest("/incomes"),
+  remove: (id) => apiRequest(`/incomes/${id}`, { method: "DELETE" }),
   // Create a new income entry
   create: async (incomeData) => {
     return apiRequest("/incomes", {
@@ -118,6 +120,14 @@ export const incomeAPI = {
       body: JSON.stringify(incomeData),
     });
   },
+};
+
+export const loadTransactions = async () => {
+  const [expenses, incomes] = await Promise.all([expenseAPI.list(), incomeAPI.list()]);
+  return [
+    ...expenses.map((item) => ({ id: item.id, type: "expense", amount: item.amount, category: item.category, description: item.note, date: item.date.slice(0, 10) })),
+    ...incomes.map((item) => ({ id: item.id, type: "income", amount: item.amount, category: item.source, description: `Income from ${item.source}`, date: item.date.slice(0, 10) })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
 };
 
 // Gamification API calls
@@ -173,10 +183,10 @@ export const marketAPI = {
 // Chat API calls
 export const chatAPI = {
   // Send a message to the AI chatbot
-  sendMessage: async (message) => {
+  sendMessage: async (message, history = []) => {
     return apiRequest("/chat", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, history }),
     });
   },
 };

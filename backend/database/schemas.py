@@ -1,7 +1,7 @@
 # database/schemas.py
 
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List, Dict
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List, Dict, Literal
 from datetime import datetime, date
 
 # --- Schemas for Authentication & Tokens (Response) ---
@@ -41,17 +41,17 @@ class OnboardingData(BaseModel):
 
 class ExpenseCreate(BaseModel):
     """Schema for logging a new expense."""
-    amount: float
+    amount: float = Field(gt=0, allow_inf_nan=False)
     category: str
     note: Optional[str] = None
     date: Optional[date] = None
 
 class SimulatorInput(BaseModel):
     """Schema for the Investment Simulator input from the frontend."""
-    start: float
-    monthly: float
-    years: int
-    risk: str # 'Low', 'Medium', or 'High'
+    start: float = Field(ge=0, allow_inf_nan=False)
+    monthly: float = Field(ge=0, allow_inf_nan=False)
+    years: int = Field(ge=1, le=50)
+    risk: Literal["Low", "Medium", "High"]
 
     
 # --- Schemas for Data Going OUT (Response Bodies) ---
@@ -74,6 +74,7 @@ class User(BaseModel):
     financial_confidence: int       # <--- FIX 1: Ensure this field exists
     fixed_budget: float
     lesson_progress: int            # <--- FIX 2: Ensure this field exists
+    cash_balance: float
 
     # --- ALL NEW PROFILE FIELDS (Must be present for return!) ---
     age: Optional[int] = None
@@ -90,6 +91,15 @@ class User(BaseModel):
     
     class Config:
         from_attributes = True
+
+class ProfileUpdate(BaseModel):
+    age: Optional[int] = None
+    occupation: Optional[str] = None
+
+class AchievementCreate(BaseModel):
+    name: str
+    icon: str = "🏅"
+    description: str = ""
 
 class Goal(BaseModel):
     """Schema for returning a goal."""
@@ -115,13 +125,14 @@ class SimulatorSession(BaseModel):
 
 class ChatMessage(BaseModel):
     message : str
+    history: List[Dict[str, str]] = []
 
 class InvestmentAction(BaseModel):
     """Schema for a user's buy/sell request in the simulator."""
     asset_type: str # 'Stock', 'Mutual Fund', 'Gold'
     symbol: str # e.g., 'AAPL' or 'Gold ETF'
-    action: str # 'Buy' or 'Sell'
-    amount: float
+    action: Literal["Buy", "Sell"]
+    amount: float = Field(gt=0, le=100000, allow_inf_nan=False)
 
 class LessonContent(BaseModel):
     lesson_title: str
@@ -129,10 +140,11 @@ class LessonContent(BaseModel):
     assignment_text: str  # The friendly instructions to the user
     unlock_criteria_key: str # CRITICAL: The key the frontend uses for the check (e.g., 'consecutive_logs_3')
     lesson_number: int
+    is_unlocked: bool = False
 
 class IncomeCreate(BaseModel):
     """Schema for logging a new income entry."""
-    amount: float
+    amount: float = Field(gt=0, allow_inf_nan=False)
     source: str
     # Allows date input similar to ExpenseCreate
     date: Optional[date] = None 

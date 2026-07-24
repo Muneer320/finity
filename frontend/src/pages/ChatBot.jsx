@@ -13,7 +13,7 @@ function ChatBot() {
     {
       role: "assistant",
       content:
-        "Hello! I'm your Finity AI Coach. I'm here to help you with your financial questions and provide personalized advice based on your profile. How can I assist you today?",
+        "Hello! I can explain financial concepts in this demo. An optional AI key enables more open-ended replies. How can I help?",
       timestamp: new Date(),
     },
   ]);
@@ -53,7 +53,8 @@ function ChatBot() {
 
     try {
       // Call backend chat API
-      const response = await chatAPI.sendMessage(currentInput);
+      const history = messages.slice(-12).map((item) => ({ role: item.role, message: item.content }));
+      const response = await chatAPI.sendMessage(currentInput, history);
 
       const aiResponse = {
         role: "assistant",
@@ -104,10 +105,10 @@ function ChatBot() {
             </div>
             <div>
               <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-                AI Financial Coach
+                Financial Learning Assistant
               </h1>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Powered by advanced AI • Available 24/7
+                Built-in explanations • Optional AI
               </p>
             </div>
           </div>

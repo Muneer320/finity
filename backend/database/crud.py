@@ -1,14 +1,9 @@
-# database/crud.py (Production Ready Code)
-
 from sqlalchemy.orm import Session
 from . import models, schemas
-from auth.auth_service import get_password_hash, verify_password # Centralized security service
+from auth.auth_service import get_password_hash
 from typing import List
-from datetime import date, timedelta, datetime
-from typing import Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import Date
-from ai.coach_agent import STATIC_ASSET_HISTORY
+from datetime import date, timedelta, datetime, UTC
+from ai.coach_agent import ASSET_CATALOG
 from fastapi import HTTPException, status
 
 # --- USER CRUD (Read and Create) ---
@@ -87,7 +82,7 @@ def create_expense(db: Session, expense: schemas.ExpenseCreate, user_id: int):
         expense_data['date'] = datetime.combine(expense_data['date'], datetime.min.time())
     else:
         # If no date provided, use the current time
-        expense_data['date'] = datetime.utcnow()
+        expense_data['date'] = datetime.now(UTC).replace(tzinfo=None)
         
     # Remove the 'note' key if it's None to clean up the dict for model instantiation
     if expense_data.get('note') is None:
@@ -113,45 +108,18 @@ def get_user_expenses(db: Session, user_id: int, skip: int = 0, limit: int = 100
 
 # --- SIMULATOR CRUD (Create) ---
 
-def create_simulator_session(db: Session, session_data: schemas.SimulatorSession, user_id: int):
-    """Saves the result of a simulation and the AI-generated course content."""
-    # Note: We need to convert the Pydantic schema back to a dictionary and add user_id
-    data_dict = session_data.model_dump(exclude_unset=True)
-    db_session = models.SimulatorSession(**data_dict, user_id=user_id)
-    
-    db.add(db_session)
-    db.commit()
-    db.refresh(db_session)
-    return db_session
-
 def calculate_consecutive_days_logged(db: Session, user_id: int) -> int:
-    """Calculates the user's current consecutive logging streak."""
-    
-    today = date.today()
-    streak = 0
-    
-    # 1. Define the casted column expression
-    casted_date_column = models.Expense.date.cast(Date).label('expense_date_only')
-
-    # 2. Query only the DISTINCT casted column, and ORDER BY the casted column
-    logged_dates_results = db.query(casted_date_column).filter(
+    logged = {row[0].date() for row in db.query(models.Expense.date).filter(
         models.Expense.owner_id == user_id
-    ).distinct(
-    ).order_by(casted_date_column.desc() # FIX: Ordering by the casted value
-    ).all()
-    
-    # Extract just the date objects from the result tuples
-    logged_dates = {d[0] for d in logged_dates_results} 
-    
-    current_day = today
-    
-    # Loop backward to calculate the streak
-    while current_day in logged_dates:
+    ).all()}
+    current_day = date.today()
+    if current_day not in logged:
+        current_day -= timedelta(days=1)
+    streak = 0
+    while current_day in logged:
         streak += 1
         current_day -= timedelta(days=1)
-        
     return streak
-
 def check_for_min_contribution_session(db: Session, user_id: int, min_amount: float = 50.0) -> bool:
     """Checks if the user has completed the simulator assignment (Lesson 2 criteria)."""
     session = db.query(models.SimulatorSession).filter(
@@ -189,14 +157,10 @@ def get_current_mock_price(symbol: str) -> float:
     """Retrieves a stable mock price for a symbol based on the latest history point."""
     
     # Get the mock history data (list of 10 dicts)
-    history = STATIC_ASSET_HISTORY.get(symbol.upper(), [])
-    
-    if history:
-        # Return the latest price point (the last item in the list)
-        return history[-1]['price']
-        
-    # Default to a base price if the symbol is not in the mock store
-    return 100.00
+    asset = next((item for item in ASSET_CATALOG if item["symbol"] == symbol.upper()), None)
+    if asset is None:
+        raise HTTPException(status_code=400, detail="Unknown paper asset")
+    return float(asset["price"])
 
 def get_asset_in_portfolio(db: Session, user_id: int, symbol: str):
     """Retrieves a specific asset from the user's portfolio."""
@@ -213,13 +177,18 @@ def get_user_portfolio_holdings(db: Session, user_id: int) -> List[models.Portfo
     ).all()
 
 def update_portfolio_shares(db: Session, user_id: int, symbol: str, amount: float, action: str):
-    
     symbol = symbol.upper()
+    if action not in ("Buy", "Sell") or not 0 < amount <= 100000:
+        raise HTTPException(status_code=400, detail="Invalid trade action or share quantity")
     asset = get_asset_in_portfolio(db, user_id, symbol)
     current_price = get_current_mock_price(symbol)
-    shares_to_trade = amount / current_price
+    shares_to_trade = amount
+    cost = round(amount * current_price, 2)
+    user = get_user_by_id(db, user_id)
     
     if action == "Buy":
+        if user.cash_balance + 0.0001 < cost:
+            raise HTTPException(status_code=400, detail="Insufficient paper cash")
         if not asset:
             # 1. NEW ASSET: Create the object and add it to the session
             asset = models.Portfolio(
@@ -228,10 +197,11 @@ def update_portfolio_shares(db: Session, user_id: int, symbol: str, amount: floa
             db.add(asset)
         else:
             # 2. EXISTING ASSET: Update existing object properties
-            new_total_cost = (asset.shares * asset.average_cost) + amount
+            new_total_cost = (asset.shares * asset.average_cost) + cost
             new_total_shares = asset.shares + shares_to_trade
             asset.average_cost = new_total_cost / new_total_shares
             asset.shares = new_total_shares
+        user.cash_balance = round(user.cash_balance - cost, 2)
             
     elif action == "Sell":
         if not asset:
@@ -247,22 +217,19 @@ def update_portfolio_shares(db: Session, user_id: int, symbol: str, amount: floa
         asset.shares -= shares_to_trade
         if asset.shares < 0.0001: 
             asset.shares = 0.0
+        user.cash_balance = round(user.cash_balance + cost, 2)
             
-    else:
-        # If the action is neither Buy nor Sell
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid action type: {action}")
-
     # CRITICAL PERSISTENCE BLOCK: Commit the transaction
     try:
         db.commit() 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Transaction failed during commit: {e}")
+        raise HTTPException(status_code=500, detail="Paper trade could not be saved")
 
     # After a successful commit, the asset is persistent. Refresh and return it.
     db.refresh(asset) 
     
-    return asset
+    return {"available_balance": user.cash_balance, "shares": asset.shares, "price": current_price}
 
 def create_income(db: Session, income: schemas.IncomeCreate, user_id: int):
     """Logs a new income entry linked to a user."""
@@ -273,7 +240,7 @@ def create_income(db: Session, income: schemas.IncomeCreate, user_id: int):
     if income_data.get('date'):
         income_data['date'] = datetime.combine(income_data['date'], datetime.min.time())
     else:
-        income_data['date'] = datetime.utcnow()
+        income_data['date'] = datetime.now(UTC).replace(tzinfo=None)
     
     db_income = models.Income(
         amount=income_data['amount'],

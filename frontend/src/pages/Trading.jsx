@@ -25,7 +25,7 @@ import { marketAPI } from "../utils/api";
 
 function Trading() {
   const { showAchievement } = useAchievement();
-  const [balance, setBalance] = useState(100000); // Starting F-Coins - fallback
+  const [balance, setBalance] = useState(0);
   const [selectedStock, setSelectedStock] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [portfolio, setPortfolio] = useState([]);
@@ -47,7 +47,11 @@ function Trading() {
     try {
       const response = await marketAPI.getLiveFeed();
       setLivePortfolio(response);
-      console.log("Live portfolio data:", response);
+      const catalog = [...response.available_stocks, ...response.available_mutual_funds];
+      setPortfolio(response.holdings.map((item) => {
+        const asset = catalog.find((entry) => entry.symbol === item.symbol);
+        return { ...asset, id: asset?.id || item.symbol, symbol: item.symbol, price: item.current_price, quantity: item.shares, boughtAt: item.average_cost };
+      }));
 
       // Update balance from API if available
       if (response.available_balance !== undefined) {
@@ -76,7 +80,6 @@ function Trading() {
     try {
       const history = await marketAPI.getAssetHistory(symbol);
       setAssetHistory(history);
-      console.log("Asset history for", symbol, ":", history);
     } catch (err) {
       console.error("Failed to fetch asset history:", err);
       setAssetHistory(null);
@@ -85,150 +88,8 @@ function Trading() {
     }
   };
 
-  // Generate mock trend data for stocks
-  const generateTrendData = (basePrice, positive) => {
-    const points = [];
-    let price = basePrice * 0.95; // Start from 95% of current price
-
-    for (let i = 0; i < 30; i++) {
-      const change = (Math.random() - 0.5) * basePrice * 0.02;
-      price += change;
-      if (positive && i > 15) {
-        price += Math.random() * basePrice * 0.01; // Trend upward
-      } else if (!positive && i > 15) {
-        price -= Math.random() * basePrice * 0.01; // Trend downward
-      }
-      points.push(price);
-    }
-    return points;
-  };
-
-  // Fallback mock stocks data
-  const fallbackStocks = [
-    {
-      id: 1,
-      symbol: "TECH",
-      name: "Tech Corp",
-      price: 2500,
-      change: 5.2,
-      positive: true,
-      category: "Technology",
-      trend: null,
-      dividend: 2.5,
-      peRatio: 18.5,
-      marketCap: "Large",
-    },
-    {
-      id: 2,
-      symbol: "FIN",
-      name: "Finance Ltd",
-      price: 1800,
-      change: -2.1,
-      positive: false,
-      category: "Finance",
-      trend: null,
-      dividend: 0,
-      peRatio: 22.3,
-      marketCap: "Mid",
-    },
-    {
-      id: 3,
-      symbol: "HEALTH",
-      name: "Health Inc",
-      price: 3200,
-      change: 3.8,
-      positive: true,
-      category: "Healthcare",
-      trend: null,
-      dividend: 3.2,
-      peRatio: 15.7,
-      marketCap: "Large",
-    },
-    {
-      id: 4,
-      symbol: "ENERGY",
-      name: "Energy Co",
-      price: 1500,
-      change: -1.5,
-      positive: false,
-      category: "Energy",
-      trend: null,
-      dividend: 4.5,
-      peRatio: 12.1,
-      marketCap: "Mid",
-    },
-    {
-      id: 5,
-      symbol: "CONS",
-      name: "Consumer Goods",
-      price: 2100,
-      change: 2.3,
-      positive: true,
-      category: "Consumer",
-      trend: null,
-      dividend: 1.8,
-      peRatio: 20.4,
-      marketCap: "Small",
-    },
-  ];
-
-  const fallbackMutualFunds = [
-    {
-      id: 6,
-      symbol: "BALANCED",
-      name: "Balanced Fund",
-      price: 5000,
-      change: 1.8,
-      positive: true,
-      category: "Mutual Fund",
-      trend: null,
-      riskLevel: "Medium",
-      returns3Y: 12.5,
-    },
-    {
-      id: 7,
-      symbol: "GROWTH",
-      name: "Growth Fund",
-      price: 8000,
-      change: 4.2,
-      positive: true,
-      category: "Mutual Fund",
-      trend: null,
-      riskLevel: "High",
-      returns3Y: 18.3,
-    },
-    {
-      id: 8,
-      symbol: "DEBT",
-      name: "Debt Fund",
-      price: 3500,
-      change: 0.8,
-      positive: true,
-      category: "Mutual Fund",
-      trend: null,
-      riskLevel: "Low",
-      returns3Y: 7.2,
-    },
-  ];
-
-  // Use API data if available, otherwise use fallback
-  const stocks = livePortfolio?.available_stocks || fallbackStocks;
-  const mutualFunds =
-    livePortfolio?.available_mutual_funds || fallbackMutualFunds;
-
-  // Generate trends for each asset (only if not already present from API)
-  stocks.forEach((stock) => {
-    if (!stock.trend) {
-      stock.trend = generateTrendData(stock.price, stock.positive);
-    }
-  });
-
-  mutualFunds.forEach((fund) => {
-    if (!fund.trend) {
-      fund.trend = generateTrendData(fund.price, fund.positive);
-    }
-  });
-
+  const stocks = livePortfolio?.available_stocks || [];
+  const mutualFunds = livePortfolio?.available_mutual_funds || [];
   const allAssets = [...stocks, ...mutualFunds];
 
   const handleBuy = async () => {
@@ -249,8 +110,7 @@ function Trading() {
         amount: quantity,
       };
 
-      const response = await marketAPI.executeAction(actionData);
-      console.log("Buy action response:", response);
+      await marketAPI.executeAction(actionData);
 
       // Update local portfolio (will be replaced by backend data on next refresh)
       const existingHolding = portfolio.find((p) => p.id === selectedStock.id);
@@ -345,9 +205,7 @@ function Trading() {
         amount: quantity,
       };
 
-      const response = await marketAPI.executeAction(actionData);
-      console.log("Sell action response:", response);
-      console.log("Sell action response:", response);
+      await marketAPI.executeAction(actionData);
 
       // Update local portfolio
       const updatedPortfolio = portfolio
@@ -1060,59 +918,6 @@ function Trading() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Loading portfolio...
                   </p>
-                </div>
-              ) : livePortfolio?.holdings?.length > 0 ? (
-                <div className="space-y-3">
-                  {livePortfolio.holdings.map((holding, index) => (
-                    <div
-                      key={index}
-                      className="p-3 bg-gray-100 dark:bg-dark-800 rounded-lg"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-mono font-bold text-gray-900 dark:text-white">
-                            {holding.symbol}
-                          </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {holding.shares} shares @ ₹{holding.average_cost}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-mono text-sm text-gray-900 dark:text-white">
-                            ₹{holding.current_value?.toLocaleString()}
-                          </p>
-                          <p
-                            className={`text-xs font-medium ${
-                              holding.gain_loss_percent >= 0
-                                ? "text-green-500"
-                                : "text-red-500"
-                            }`}
-                          >
-                            {holding.gain_loss_percent >= 0 ? "+" : ""}
-                            {holding.gain_loss_percent?.toFixed(2)}%
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Current: ₹{holding.current_price}
-                        </span>
-                        <span
-                          className={`font-medium ${
-                            holding.gain_loss_percent >= 0
-                              ? "text-green-500"
-                              : "text-red-500"
-                          }`}
-                        >
-                          {holding.gain_loss_percent >= 0 ? "↑" : "↓"} ₹
-                          {Math.abs(
-                            holding.current_value -
-                              holding.shares * holding.average_cost
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               ) : portfolio.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">

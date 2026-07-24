@@ -1,14 +1,14 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
 from .models import Base 
 
 load_dotenv()
-SUPABASE_DATABASE_URL = os.getenv("SUPABASE_DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DATABASE_URL") or "sqlite:///./finity.db"
 
 engine = create_engine(
-    SUPABASE_DATABASE_URL,
+    DATABASE_URL,
     pool_pre_ping = True,
     pool_recycle = 3600
 )
@@ -23,6 +23,7 @@ def get_db():
         db.close()
 
 def create_db_and_tables():
-    print("Attempting to create database tables in Supabase...")
     Base.metadata.create_all(bind=engine)
-    print("Tables created/verified.")
+    if "cash_balance" not in {column["name"] for column in inspect(engine).get_columns("users")}:
+        with engine.begin() as connection:
+            connection.execute(text("ALTER TABLE users ADD COLUMN cash_balance FLOAT NOT NULL DEFAULT 100000"))

@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -15,16 +15,16 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { getAchievements } from "../utils/achievementManager";
 
 function Layout({ children }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [showAchievements, setShowAchievements] = useState(false);
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "AI Coach", href: "/chat", icon: MessageSquare },
+    { name: "Learning Assistant", href: "/chat", icon: MessageSquare },
     { name: "FinityArena", href: "/trading", icon: TrendingUp },
     { name: "Micro Courses", href: "/courses", icon: BookOpen },
     { name: "Expenses", href: "/expenses", icon: DollarSign },
@@ -35,10 +35,12 @@ function Layout({ children }) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("questionnaireCompleted");
-    navigate("/login");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_email");
+    window.location.assign("/login");
   };
 
-  const achievements = JSON.parse(localStorage.getItem("achievements") || "[]");
+  const achievements = getAchievements();
 
   // All possible achievements in the app
   const allPossibleAchievements = [

@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
 import { API_BASE_URL, userAPI } from "../utils/api";
 
-function Login({ setIsAuthenticated }) {
+function Login({ setIsAuthenticated, setHasCompletedQuestionnaire }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -49,8 +49,12 @@ function Login({ setIsAuthenticated }) {
         const profile = await userAPI.getProfile();
         // Check if user has completed onboarding (age will be set after onboarding)
         if (!profile.age) {
+          localStorage.removeItem("questionnaireCompleted");
+          setHasCompletedQuestionnaire(false);
           navigate("/questionnaire");
         } else {
+          localStorage.setItem("questionnaireCompleted", "true");
+          setHasCompletedQuestionnaire(true);
           navigate("/dashboard");
         }
       } catch (profileErr) {

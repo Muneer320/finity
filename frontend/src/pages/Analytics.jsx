@@ -8,7 +8,7 @@ import {
   Target,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { marketAPI } from "../utils/api";
+import { marketAPI, loadTransactions } from "../utils/api";
 
 function Analytics() {
   const [transactions, setTransactions] = useState([]);
@@ -23,8 +23,7 @@ function Analytics() {
   const [simLoading, setSimLoading] = useState(false);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("transactions") || "[]");
-    setTransactions(saved);
+    loadTransactions().then(setTransactions).catch(console.error);
   }, []);
 
   // Calculate category spending
@@ -388,18 +387,10 @@ function Analytics() {
                       🎓
                     </div>
                     <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                      AI-Generated Investment Masterclass
+                      Investment projection lesson
                     </h3>
                   </div>
-                  <div
-                    className="prose dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: simResult.course_content
-                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                        .replace(/### (.*?)(\n|$)/g, "<h3>$1</h3>")
-                        .replace(/\n/g, "<br/>"),
-                    }}
-                  />
+                  <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">{simResult.course_content}</p>
                 </div>
               )}
             </div>

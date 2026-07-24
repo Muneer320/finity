@@ -5,9 +5,7 @@ from google.genai import types
 from dotenv import load_dotenv
 import os
 from typing import List, Dict
-import random
 from datetime import datetime, timedelta
-from database.schemas import InvestmentAction
 
 # --- Configuration and Client Initialization ---
 load_dotenv()
@@ -24,32 +22,24 @@ except Exception as e:
 
 # --- Investment Simulation Logic (Internal Tool for the LLM) ---
 
-STATIC_ASSET_HISTORY = {}
-ASSET_LIST = [
-    "AAPL", "GOOG", "MSFT", "TSLA", "AMZN", 
-    "VTI", "VOO", "SBUX", "DIS", "JNJ",
-    "GOLD_ETF", "US_BONDS", "IND_FUND"
+ASSET_CATALOG = [
+    {"id": 1, "symbol": "TECH", "name": "Tech Corp", "price": 2500, "change": 5.2, "category": "Technology", "dividend": 2.5, "peRatio": 18.5, "marketCap": "Large", "type": "Stock"},
+    {"id": 2, "symbol": "FIN", "name": "Finance Ltd", "price": 1800, "change": -2.1, "category": "Finance", "dividend": 0, "peRatio": 22.3, "marketCap": "Mid", "type": "Stock"},
+    {"id": 3, "symbol": "HEALTH", "name": "Health Inc", "price": 3200, "change": 3.8, "category": "Healthcare", "dividend": 3.2, "peRatio": 15.7, "marketCap": "Large", "type": "Stock"},
+    {"id": 4, "symbol": "ENERGY", "name": "Energy Co", "price": 1500, "change": -1.5, "category": "Energy", "dividend": 4.5, "peRatio": 12.1, "marketCap": "Mid", "type": "Stock"},
+    {"id": 5, "symbol": "CONS", "name": "Consumer Goods", "price": 2100, "change": 2.3, "category": "Consumer", "dividend": 1.8, "peRatio": 20.4, "marketCap": "Small", "type": "Stock"},
+    {"id": 6, "symbol": "BALANCED", "name": "Balanced Fund", "price": 5000, "change": 1.8, "category": "Mutual Fund", "riskLevel": "Medium", "returns3Y": 12.5, "type": "Mutual Fund"},
+    {"id": 7, "symbol": "GROWTH", "name": "Growth Fund", "price": 8000, "change": 4.2, "category": "Mutual Fund", "riskLevel": "High", "returns3Y": 18.3, "type": "Mutual Fund"},
+    {"id": 8, "symbol": "DEBT", "name": "Debt Fund", "price": 3500, "change": 0.8, "category": "Mutual Fund", "riskLevel": "Low", "returns3Y": 7.2, "type": "Mutual Fund"},
 ]
-
-def _generate_mock_prices(base_price, volatility):
-    """Helper to generate a slightly variable price trend."""
-    prices = []
-    current_date = datetime.now().date()
-    current_price = base_price
-    
-    for i in range(9, -1, -1):
-        date = (current_date - timedelta(days=i)).isoformat()
-        # Price fluctuates based on volatility
-        change = random.uniform(-volatility, volatility)
-        current_price += change
-        current_price = max(current_price, base_price * 0.95) # Keep price realistic
-        prices.append({"date": date, "price": round(current_price, 2)})
-    return prices
-
-for symbol in ASSET_LIST:
-    base = 150.0 + (hash(symbol) % 100) # Unique base price
-    volatility = 1.0 + (hash(symbol) % 3) / 2 # Unique volatility
-    STATIC_ASSET_HISTORY[symbol] = _generate_mock_prices(base, volatility)
+for asset in ASSET_CATALOG:
+    asset["positive"] = asset["change"] >= 0
+    asset["trend"] = [round(asset["price"] * (0.94 + i * 0.006), 2) for i in range(10)]
+STATIC_ASSET_HISTORY = {asset["symbol"]: [
+    {"date": (datetime.now().date() - timedelta(days=9-i)).isoformat(), "price": value}
+    for i, value in enumerate(asset["trend"])
+] for asset in ASSET_CATALOG}
+ASSET_LIST = list(STATIC_ASSET_HISTORY)
 
 def get_mock_asset_history(symbol: str) -> List[Dict]:
     """Retrieves the static 10-day historical data for a symbol."""
@@ -100,10 +90,10 @@ def generate_financial_summary(user_data: Dict, expenses: List[Dict]) -> str:
     SYSTEM ROLE: You are 'Frugal Friend,' a supportive, expert financial coach. Analyze the user's spending and goals to provide a summary in a friendly, non-judgmental tone.
     
     USER FINANCIAL DATA:
-    - Monthly Fixed Budget: ${user_data.get('fixed_budget', 0)}
+    - Monthly Fixed Budget: ₹{user_data.get('fixed_budget', 0)}
     - Financial Confidence Score: {user_data.get('financial_confidence', 5)}/10
     - Goal: {user_data.get('goal_name', 'No Goal Set')}
-    - Highest Spending Category (Recent): {highest_category} (${highest_spent})
+    - Highest Spending Category (Recent): {highest_category} (₹{highest_spent})
     
     INSTRUCTIONS:
     1.  **Quick Win:** Find one positive aspect (e.g., consistency, low spending in a non-essential area, or simply logging daily).
@@ -131,13 +121,16 @@ def generate_financial_summary(user_data: Dict, expenses: List[Dict]) -> str:
 
 def generate_investment_micro_course(user_data: Dict, simulation_result: Dict) -> str:
     """Generates the investment micro-course based on simulation results."""
-    if not client: return "AI Course Generator is offline."
+    if not client:
+        return ("This is a hypothetical projection, not a forecast. Compounding means returns may generate further returns over time. "
+                "Compare the projected value with your total contributions, then try different contribution and risk assumptions. "
+                "Actual investment returns can differ substantially and can be negative.")
     
     # Combine user goals with structured simulation data
     simulation_text = (
         f"Goal: {user_data.get('goal_name')}. "
-        f"Simulation Result: Projected Value=${simulation_result['projected_final_value']}, "
-        f"Total Gain=${simulation_result['total_gain']} over {simulation_result['total_years']} years."
+        f"Simulation Result: Projected Value=₹{simulation_result['projected_final_value']}, "
+        f"Total Gain=₹{simulation_result['total_gain']} over {simulation_result['total_years']} years."
     )
     
     prompt = f"""
@@ -145,7 +138,7 @@ def generate_investment_micro_course(user_data: Dict, simulation_result: Dict) -
     
     INSTRUCTIONS:
     1.  Create a title: **Your 5-Minute Investment Masterclass**
-    2.  Explain the power of **compound interest** using the user's projected gain (${simulation_result['total_gain']}) as the primary example.
+    2.  Explain the power of **compound interest** using the user's projected gain (₹{simulation_result['total_gain']}) as the primary example.
     3.  Explain the **mock risk level** ({simulation_result['mock_annual_rate']}% mock rate) in simple terms, adjusted for the user's confidence ({user_data.get('financial_confidence')}/10).
     4.  End with one **simple action step** to "start paper trading."
     
@@ -161,7 +154,17 @@ def generate_investment_micro_course(user_data: Dict, simulation_result: Dict) -
 
 def get_chat_response(user_message: str, chat_history: List[Dict]) -> str:
     """Handles conversational chat, including general Q&A and financial literacy."""
-    if not client: return "AI Chatbot is offline."
+    if not client:
+        question = user_message.lower()
+        if "compound" in question:
+            return "Compound interest means interest can earn more interest over time. Try different assumptions in the paper simulator to see how the projection changes."
+        if "emergency" in question:
+            return "An emergency fund is cash set aside for unexpected costs. Start by tracking expenses so you can choose a target that fits your situation."
+        if "mutual" in question:
+            return "A mutual fund pools investors' money into a portfolio. Its value can rise or fall; Finity's fund prices are fictional and only for practice."
+        if "budget" in question:
+            return "A budget compares income with planned and actual spending. Log a few expenses and look at the category chart to spot patterns."
+        return "The optional AI coach is unavailable. You can still use Finity's paper trading, expense tracking, and investment projection demo. Ask about compound interest, emergency funds, mutual funds, or budgeting for a built-in explanation."
 
     # Inject the history and a system persona
     full_prompt = f"""
@@ -180,62 +183,6 @@ def get_chat_response(user_message: str, chat_history: List[Dict]) -> str:
     )
     return response.text
 
-# ai/coach_agent.py (New function for transactional simulation)
-
-def execute_investment_simulation(user_id: int, action_data: Dict) -> Dict: 
-    """
-    Simulates a real-time investment transaction via the AI agent.
-    Returns structured status update and calls Gemini for advice generation.
-    """
-    global client, MODEL # Access global variables
-    if not client: 
-        return {"status": "error", "message": "Simulation offline. Gemini API key issue.", "advice_nudge": "Please check your .env file."}
-
-    # 1. Mock the outcome based on amount
-    # CRITICAL: action_data is now treated as a dictionary (dict)
-    if action_data['amount'] > 500 and action_data['action'] == 'Buy': 
-        # 10% chance of failure for high risk/high amount
-        status_key = random.choices(['success', 'failure'], weights=[90, 10], k=1)[0] 
-    else:
-        status_key = 'success'
-        
-    if status_key == 'success':
-        msg = f"Order CONFIRMED! Successfully executed {action_data['action']} of ${action_data['amount']} of {action_data['symbol']} (Paper)."
-    else:
-        msg = f"Order FAILED: Market volatility detected. The paper engine blocked the transaction to limit risk."
-
-    # 2. Witty Nudge Generation Prompt
-    # FIX: Using bracket notation (action_data['key']) everywhere in the prompt
-    prompt = f"""
-    SYSTEM ROLE: You are the trading engine for 'The Frugal Friend' paper trading platform. 
-    The user just received a '{status_key}' status for their simulated '{action_data['action']}' action on '{action_data['symbol']}'.
-    
-    INSTRUCTIONS:
-    1. Generate a single, concise, witty, and supportive post-transaction message (nudge).
-    2. If status is 'failure', the nudge should emphasize patience or learning.
-    3. If status is 'success', the nudge should emphasize discipline or long-term view.
-    """
-    
-    # Generate the witty advice using Gemini
-    try:
-        response = client.models.generate_content(
-            model=MODEL, 
-            contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.6) # Increased creativity
-        )
-        witty_advice = response.text.strip()
-    except Exception:
-        # Fallback if AI call fails
-        witty_advice = "Simulator response delayed. Great job testing our systems!"
-
-    # 3. Return the structured result
-    return {
-        "status": status_key, 
-        "message": msg,
-        "advice_nudge": witty_advice,
-        "asset_bought": action_data['symbol']
-    }
-
 def generate_next_lesson(user_data: Dict, lesson_index: int) -> Dict:
     """
     Generates a single personalized lesson and its required Proof-of-Concept assignment.
@@ -243,14 +190,15 @@ def generate_next_lesson(user_data: Dict, lesson_index: int) -> Dict:
     to ensure predictable backend checks.
     """
     # Check for Gemini client initialization failure
-    if not client: 
-        return {
-            "lesson_title": "System Offline", 
-            "lesson_content": "AI Coach is unavailable. Please check the API connection.", 
-            "assignment_text": "Check backend connection.", 
-            "unlock_criteria_key": "none", 
-            "lesson_number": lesson_index
-        }
+    if not client:
+        lessons = [
+            ("Spending awareness", "A useful budget starts with a record of what you actually spend. Fixed costs recur, while variable costs change. Log expenses in Finity to see both patterns.", "Log expenses on three consecutive days.", "consecutive_logs_3"),
+            ("Compound growth", "Compounding means returns can produce further returns. Finity's projection uses hypothetical rates and is not a forecast. Change the contribution and risk setting to explore the assumptions.", "Run a projection with at least ₹50 monthly contribution.", "simulator_run_min_50"),
+            ("Category planning", "Grouping expenses can reveal where money goes. Compare categories with your income and choose goals that fit your circumstances.", "Log expenses in five categories.", "expense_categories_5"),
+        ]
+        index = min(max(lesson_index, 1), len(lessons)) - 1
+        title, content, assignment, key = lessons[index]
+        return {"lesson_title": title, "lesson_content": content, "assignment_text": assignment, "unlock_criteria_key": key, "lesson_number": index + 1}
 
     # --- 1. Define POC Assignment and Criteria based on Index ---
     # This dictionary maps the lesson index to the required POC activity.
@@ -263,7 +211,7 @@ def generate_next_lesson(user_data: Dict, lesson_index: int) -> Dict:
         2: {
             "topic": "The Power of Compounding Interest: Making Money Work", 
             "criteria": "simulator_run_min_50", 
-            "instruction": "Your assignment: Go to the Investment Simulator and run a scenario with a monthly contribution of at least $50. Find your gain!"
+            "instruction": "Your assignment: Go to the Investment Simulator and run a scenario with a monthly contribution of at least ₹50. Find your gain!"
         },
         3: {
             "topic": "Mastering the Budget: The Zero-Based Audit", 
@@ -284,7 +232,7 @@ def generate_next_lesson(user_data: Dict, lesson_index: int) -> Dict:
     prompt = f"""
     SYSTEM ROLE: You are 'Frugal Friend,' an expert financial educator. Your goal is to simplify investment concepts and budgeting habits for a beginner user.
     
-    USER DATA: Fixed Budget: ${user_data['fixed_budget']}, Confidence: {user_data['financial_confidence']}/10.
+    USER DATA: Fixed Budget: ₹{user_data['fixed_budget']}, Confidence: {user_data['financial_confidence']}/10.
     
     INSTRUCTIONS:
     1.  Generate a concise, simplified lesson content (max 5 sentences) on the topic: '{topic}'.

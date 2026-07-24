@@ -13,7 +13,7 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
 } from "../utils/achievementManager";
-import { courseAPI, userAPI } from "../utils/api";
+import { courseAPI, userAPI, marketAPI, loadTransactions } from "../utils/api";
 
 function MicroCourse() {
   const { showAchievement } = useAchievement();
@@ -22,9 +22,9 @@ function MicroCourse() {
   const [nextLesson, setNextLesson] = useState(null);
   const [loadingLesson, setLoadingLesson] = useState(false);
 
-  // Get trading history to personalize courses
-  const portfolio = JSON.parse(localStorage.getItem("portfolio") || "[]");
-  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  const [portfolio, setPortfolio] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const progressKey = `completedLessons:${localStorage.getItem("user_id") || "anonymous"}`;
 
   // Determine user's trading behavior
   const hasStockTrades = portfolio.some(
@@ -163,7 +163,7 @@ function MicroCourse() {
         </ul>
         
         <h3>Golden Rule:</h3>
-        <p>Never risk more than 1-2% of your total portfolio on a single trade.</p>
+        <p>Position size describes how much of a portfolio is exposed to one asset. Larger positions increase concentration risk.</p>
       `,
     },
     {
@@ -222,9 +222,9 @@ function MicroCourse() {
         
         <h3>Asset Allocation Strategy:</h3>
         <ul>
-          <li><strong>Age-Based:</strong> 100 - your age = % in stocks</li>
-          <li><strong>Goal-Based:</strong> Align with financial goals (retirement, home, etc.)</li>
-          <li><strong>Risk-Based:</strong> Conservative, moderate, or aggressive</li>
+          <li><strong>Time horizon:</strong> Different goals can have different timelines.</li>
+          <li><strong>Goal-based:</strong> Allocation is one way to match assets with goals.</li>
+          <li><strong>Risk:</strong> Every asset mix can lose value.</li>
         </ul>
         
         <h3>Rebalancing:</h3>
@@ -232,9 +232,8 @@ function MicroCourse() {
         
         <h3>Tax Efficiency:</h3>
         <ul>
-          <li>Use tax-advantaged accounts (PPF, ELSS)</li>
-          <li>Hold investments for long-term gains</li>
-          <li>Harvest tax losses when appropriate</li>
+          <li>Tax treatment depends on the account, asset, and jurisdiction.</li>
+          <li>Review current rules before making any tax decision.</li>
         </ul>
       `,
     },
@@ -244,15 +243,7 @@ function MicroCourse() {
     if (!completedLessons.includes(courseId)) {
       const updated = [...completedLessons, courseId];
       setCompletedLessons(updated);
-      localStorage.setItem("completedLessons", JSON.stringify(updated));
-
-      // Call backend API to mark lesson as complete
-      try {
-        await courseAPI.completeLesson();
-        console.log("Lesson marked as complete on backend");
-      } catch (error) {
-        console.error("Error completing lesson:", error);
-      }
+      localStorage.setItem(progressKey, JSON.stringify(updated));
 
       // Award achievement for completing first course
       if (updated.length === 1) {
@@ -296,8 +287,10 @@ function MicroCourse() {
   };
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("completedLessons") || "[]");
+    const saved = JSON.parse(localStorage.getItem(progressKey) || "[]");
     setCompletedLessons(saved);
+    marketAPI.getLiveFeed().then((feed) => setPortfolio(feed.holdings.map((item) => ({ ...item, category: feed.available_mutual_funds.some((fund) => fund.symbol === item.symbol) ? "Mutual Fund" : "Stock" })))).catch(console.error);
+    loadTransactions().then(setTransactions).catch(console.error);
 
     // Fetch next lesson from backend
     fetchNextLesson();
@@ -312,7 +305,7 @@ function MicroCourse() {
             Micro Courses
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Personalized learning based on your trading activity
+            Short financial literacy lessons for this demo
           </p>
         </div>
 
@@ -383,22 +376,22 @@ function MicroCourse() {
                         <p className="text-sm text-white/90 mb-3">
                           {nextLesson.assignment_text}
                         </p>
-                        <div
-                          className="text-sm prose prose-invert max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: nextLesson.lesson_content,
-                          }}
-                        />
+                        <p className="text-sm whitespace-pre-wrap">{nextLesson.lesson_content}</p>
                       </div>
                     </div>
                     <button
                       onClick={async () => {
-                        await courseAPI.completeLesson();
-                        fetchNextLesson();
+                        try {
+                          await courseAPI.completeLesson();
+                          fetchNextLesson();
+                        } catch (error) {
+                          alert(error.message || "Finish the assignment first");
+                        }
                       }}
-                      className="mt-4 px-4 py-2 bg-white text-primary-600 rounded-lg font-medium hover:bg-white/90 transition-colors"
+                      disabled={!nextLesson.is_unlocked}
+                      className="mt-4 px-4 py-2 bg-white text-primary-600 rounded-lg font-medium hover:bg-white/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Complete Lesson
+                      {nextLesson.is_unlocked ? "Complete Lesson" : "Finish assignment first"}
                     </button>
                   </div>
                 </div>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUserProfile } from "../hooks/useUserProfile";
+import { userAPI } from "../utils/api";
 
 function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -42,23 +43,18 @@ function Profile() {
       setEditedData(cached);
     }
 
-    const userAchievements = JSON.parse(
-      localStorage.getItem("achievements") || "[]"
-    );
+    const userAchievements = profile?.achievements ? JSON.parse(profile.achievements) : [];
     setAchievements(userAchievements);
   }, [profile]);
 
   const handleSave = async () => {
-    // TODO: Save to backend API when update endpoint is available
-    localStorage.setItem("userProfile", JSON.stringify(editedData));
-    setUserData(editedData);
-    setIsEditing(false);
-
-    // Refresh profile from backend
     try {
+      const saved = await userAPI.updateProfile({ age: Number(editedData.age), occupation: editedData.occupation });
+      setUserData(saved);
+      setIsEditing(false);
       await refreshProfile();
     } catch (err) {
-      console.error("Failed to refresh profile:", err);
+      alert(err.message || "Could not save profile");
     }
   };
 

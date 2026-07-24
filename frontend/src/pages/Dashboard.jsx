@@ -15,14 +15,16 @@ import {
   awardAchievement,
   ACHIEVEMENT_TYPES,
   recordLogin,
+  getAchievements,
 } from "../utils/achievementManager";
 import { useUserProfile } from "../hooks/useUserProfile";
-import { gamificationAPI } from "../utils/api";
+import { gamificationAPI, marketAPI } from "../utils/api";
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
   const [streak, setStreak] = useState(0);
   const [streakLoading, setStreakLoading] = useState(true);
+  const [portfolioValue, setPortfolioValue] = useState(0);
   const { showAchievement } = useAchievement();
   const { profile, loading: profileLoading, refreshProfile } = useUserProfile();
 
@@ -49,14 +51,13 @@ function Dashboard() {
     };
 
     fetchStreak();
+    marketAPI.getLiveFeed().then((feed) => setPortfolioValue(feed.total_portfolio_value)).catch(console.error);
 
     // Record login for streak tracking
     recordLogin();
 
     // Award first achievement on dashboard visit
-    const achievements = JSON.parse(
-      localStorage.getItem("achievements") || "[]"
-    );
+    const achievements = getAchievements();
     if (achievements.length === 0) {
       const firstAchievement = {
         icon: "🎉",
@@ -88,16 +89,16 @@ function Dashboard() {
       positive: true,
     },
     {
-      name: "Current Investments",
-      value: formatCurrency(userData?.current_investment),
-      change: `${userData?.experience_level || "Beginner"} Level`,
+      name: "Paper Portfolio",
+      value: formatCurrency(portfolioValue),
+      change: "Fictional assets",
       icon: TrendingUp,
       positive: true,
     },
     {
       name: "Learning Progress",
-      value: `${userData?.lesson_progress || 0}%`,
-      change: "Keep going!",
+      value: `${userData?.lesson_progress || 0} / 3`,
+      change: "Backend lessons completed",
       icon: Target,
       positive: true,
     },
@@ -113,22 +114,12 @@ function Dashboard() {
     },
   ];
 
-  const recentActivity = [
-    {
-      type: "achievement",
-      title: "New Achievement Earned!",
-      description: "Getting Started - Completed your profile",
-      time: "Just now",
-      icon: "🎉",
-    },
-    {
-      type: "welcome",
-      title: "Welcome to Finity!",
-      description: "Start your journey by exploring the AI Coach",
-      time: "1 min ago",
-      icon: "👋",
-    },
-  ];
+  const recentActivity = getAchievements().slice(-3).reverse().map((item) => ({
+    title: item.name,
+    description: item.description,
+    time: item.date ? new Date(item.date).toLocaleDateString() : "",
+    icon: item.icon || "🏅",
+  }));
 
   if (profileLoading && !userData) {
     return (
@@ -315,6 +306,7 @@ function Dashboard() {
             Recent Activity
           </h2>
           <div className="space-y-4">
+            {recentActivity.length === 0 && <p className="text-sm text-gray-500">No recent activity yet.</p>}
             {recentActivity.map((activity, index) => (
               <div
                 key={index}

@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-from datetime import datetime
+from sqlalchemy.orm import declarative_base, relationship
+from datetime import datetime, UTC
 
 Base = declarative_base()
 
@@ -17,6 +16,7 @@ class User(Base):
     fixed_budget = Column(Float, default=0.0)
     financial_confidence = Column(Integer, default=5)
     lesson_progress = Column(Integer, default=0) 
+    cash_balance = Column(Float, nullable=False, default=100000.0)
     
     # --- NEW PROFILE FIELDS (Profile Page Data) ---
     age = Column(Integer, nullable=True) # New
@@ -48,7 +48,7 @@ class Expense(Base):
     amount = Column(Float, nullable=False)
     category = Column(String, nullable=False)
     note = Column(Text, nullable=True)
-    date = Column(DateTime, default=datetime.utcnow)
+    date = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
     
     owner_id = Column(Integer, ForeignKey('users.id'))
     owner = relationship("User", back_populates="expenses")
@@ -99,7 +99,7 @@ class Income(Base):
     id = Column(Integer, primary_key=True, index=True)
     amount = Column(Float, nullable=False)
     source = Column(String, nullable=False)  # e.g., Salary, Freelance, Bonus
-    date = Column(DateTime, default=datetime.utcnow) # Accepts user-provided date
+    date = Column(DateTime, default=lambda: datetime.now(UTC).replace(tzinfo=None))
     
     owner_id = Column(Integer, ForeignKey('users.id'))
     owner = relationship("User", back_populates="incomes")

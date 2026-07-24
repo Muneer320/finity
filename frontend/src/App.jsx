@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AchievementProvider } from "./context/AchievementContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -19,20 +19,9 @@ import MicroCourse from "./pages/MicroCourse";
 import Homepage from "./pages/Homepage"
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("token"));
   const [hasCompletedQuestionnaire, setHasCompletedQuestionnaire] =
-    useState(false);
-
-  useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem("token");
-    const questionnaireCompleted = localStorage.getItem(
-      "questionnaireCompleted"
-    );
-
-    setIsAuthenticated(!!token);
-    setHasCompletedQuestionnaire(!!questionnaireCompleted);
-  }, []);
+    useState(() => !!localStorage.getItem("questionnaireCompleted"));
 
   const PrivateRoute = ({ children }) => {
     if (!isAuthenticated) {
@@ -53,9 +42,9 @@ function App() {
           <Route path="/" element={<Homepage />} />
           <Route
             path="/login"
-            element={<Login setIsAuthenticated={setIsAuthenticated} />}
+            element={<Login setIsAuthenticated={setIsAuthenticated} setHasCompletedQuestionnaire={setHasCompletedQuestionnaire} />}
           />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/signup" element={<Signup setIsAuthenticated={setIsAuthenticated} setHasCompletedQuestionnaire={setHasCompletedQuestionnaire} />} />
           <Route
             path="/questionnaire"
             element={
